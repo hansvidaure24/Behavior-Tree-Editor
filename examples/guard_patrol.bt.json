@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "title": "Guard Patrol",
+  "description": "Simple patrol → chase → attack behavior for Hold Steadfast enemies",
+  "root": "root_sel",
+  "nodes": {
+    "root_sel": {
+      "id": "root_sel",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["attack_seq", "chase_seq", "patrol_act"],
+      "parameters": {}
+    },
+    "attack_seq": {
+      "id": "attack_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Attack",
+      "children": ["in_range_cond", "attack_act"],
+      "parameters": {}
+    },
+    "in_range_cond": {
+      "id": "in_range_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is In Attack Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 2.0}
+    },
+    "attack_act": {
+      "id": "attack_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack Target",
+      "children": [],
+      "parameters": {"animation": "attack_slash"}
+    },
+    "chase_seq": {
+      "id": "chase_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Chase",
+      "children": ["has_target_cond", "move_to_act"],
+      "parameters": {}
+    },
+    "has_target_cond": {
+      "id": "has_target_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Target",
+      "children": [],
+      "parameters": {"key": "has_target", "op": "eq", "value": true}
+    },
+    "move_to_act": {
+      "id": "move_to_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"speed": 5.0}
+    },
+    "patrol_act": {
+      "id": "patrol_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Patrol Waypoints",
+      "children": [],
+      "parameters": {"speed": 2.0, "wait_time": 3.0}
+    }
+  }
+}

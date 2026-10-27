@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "title": "Healer Support",
+  "description": "Check ally health, move to most wounded ally, cast heal, retreat if threatened",
+  "root": "10000001",
+  "nodes": {
+    "10000001": {
+      "id": "10000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["10000002", "10000007", "1000000d"],
+      "parameters": {}
+    },
+    "10000002": {
+      "id": "10000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Retreat If Threatened",
+      "children": ["10000003", "10000004"],
+      "parameters": {}
+    },
+    "10000003": {
+      "id": "10000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Self Health Critical",
+      "children": [],
+      "parameters": {"key": "self_health_pct", "op": "lt", "value": 0.25}
+    },
+    "10000004": {
+      "id": "10000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Retreat Behind Allies",
+      "children": [],
+      "parameters": {"speed": 5.5, "target": "safe_position_behind_front_line"}
+    },
+    "10000007": {
+      "id": "10000007",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Heal Wounded Ally",
+      "children": ["10000008", "10000009", "1000000a", "1000000b"],
+      "parameters": {}
+    },
+    "10000008": {
+      "id": "10000008",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Wounded Ally Exists",
+      "children": [],
+      "parameters": {"key": "most_wounded_ally_health_pct", "op": "lt", "value": 0.6}
+    },
+    "10000009": {
+      "id": "10000009",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Wounded Ally",
+      "children": [],
+      "parameters": {"speed": 4.5, "stop_distance": 3.0}
+    },
+    "1000000a": {
+      "id": "1000000a",
+      "type": "action",
+      "category": "leaf",
+      "name": "Cast Heal",
+      "children": [],
+      "parameters": {"heal_amount": 50, "cast_time": 1.5, "animation": "cast_holy_light"}
+    },
+    "1000000b": {
+      "id": "1000000b",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Heal Cooldown",
+      "children": ["1000000c"],
+      "parameters": {"duration": 3.0}
+    },
+    "1000000c": {
+      "id": "1000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Wait For Cooldown",
+      "children": [],
+      "parameters": {"animation": "idle_channeling"}
+    },
+    "1000000d": {
+      "id": "1000000d",
+      "type": "action",
+      "category": "leaf",
+      "name": "Stay Behind Front Line",
+      "children": [],
+      "parameters": {"speed": 3.0, "follow_target": "squad_center", "keep_distance": 6.0}
+    }
+  }
+}

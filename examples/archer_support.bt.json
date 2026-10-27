@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "title": "Archer Support",
+  "description": "Find vantage point, provide cover fire, relocate when flanked",
+  "root": "f0000001",
+  "nodes": {
+    "f0000001": {
+      "id": "f0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["f0000002", "f0000008", "f000000d"],
+      "parameters": {}
+    },
+    "f0000002": {
+      "id": "f0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Relocate When Flanked",
+      "children": ["f0000003", "f0000004"],
+      "parameters": {}
+    },
+    "f0000003": {
+      "id": "f0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemy Too Close",
+      "children": [],
+      "parameters": {"key": "nearest_enemy_distance", "op": "lt", "value": 5.0}
+    },
+    "f0000004": {
+      "id": "f0000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Flee To Vantage Point",
+      "children": [],
+      "parameters": {"speed": 6.0, "target": "nearest_high_ground"}
+    },
+    "f0000008": {
+      "id": "f0000008",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Cover Fire",
+      "children": ["f0000009", "f000000a", "f000000b"],
+      "parameters": {}
+    },
+    "f0000009": {
+      "id": "f0000009",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Target In Bow Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 25.0}
+    },
+    "f000000a": {
+      "id": "f000000a",
+      "type": "action",
+      "category": "leaf",
+      "name": "Draw And Aim",
+      "children": [],
+      "parameters": {"aim_time": 0.8, "animation": "bow_draw"}
+    },
+    "f000000b": {
+      "id": "f000000b",
+      "type": "action",
+      "category": "leaf",
+      "name": "Fire Arrow",
+      "children": [],
+      "parameters": {"damage": 30, "arrow_speed": 40.0, "animation": "bow_release"}
+    },
+    "f000000d": {
+      "id": "f000000d",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Take Vantage Position",
+      "children": ["f000000e", "f000000f"],
+      "parameters": {}
+    },
+    "f000000e": {
+      "id": "f000000e",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Not At Vantage Point",
+      "children": [],
+      "parameters": {"key": "at_vantage_point", "op": "eq", "value": false}
+    },
+    "f000000f": {
+      "id": "f000000f",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Vantage Point",
+      "children": [],
+      "parameters": {"speed": 4.0, "target": "nearest_high_ground"}
+    }
+  }
+}

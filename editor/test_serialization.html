@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Serialization Tests</title>
+<style>
+  body { font-family: monospace; background: #111; color: #ccc; padding: 1rem; }
+  .pass { color: #22c55e; }
+  .fail { color: #ef4444; }
+  h1 { color: #fff; font-size: 1rem; margin-bottom: 1rem; }
+  #results { list-style: none; padding: 0; line-height: 1.8; }
+</style>
+</head>
+<body>
+<h1>Serialization Tests</h1>
+<ul id="results"></ul>
+
+<!-- nodes.js must load first (Serialization has no dep on it, but the task asks for both) -->
+<script src="nodes.js"></script>
+<script src="serialization.js"></script>
+<script>
+  const results = document.getElementById("results");
+
+  function assert(cond, msg) {
+    const li = document.createElement("li");
+    li.className = cond ? "pass" : "fail";
+    li.textContent = (cond ? "PASS" : "FAIL") + "  " + msg;
+    results.appendChild(li);
+    console.assert(cond, msg);
+  }
+
+  function eq(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+
+  // ── 1. Round-trip empty tree ───────────────────────────────────────────────
+  (() => {
+    const { tree, layout } = Serialization.toJSON({ title: "", description: "", root: "", nodes: [] });
+    const state = Serialization.fromJSON(tree, layout);
+    // toJSON normalises "" → "Untitled"; fromJSON reads that back — round-trip is consistent
+    assert(state.title === "Untitled",        "empty tree: title normalises to Untitled");
+    assert(state.description === "",          "empty tree: description empty");
+    assert(state.root === "",                 "empty tree: root empty");
+    assert(Array.isArray(state.nodes),        "empty tree: nodes is array");
+    assert(state.nodes.length === 0,          "empty tree: nodes is empty");
+  })();
+
+  // ── 2. Round-trip with nodes (sequence + 2 action children) ───────────────
+  (() => {
+    const input = {
+      title: "Chase Player",
+      description: "Enemy AI",
+      root: "n1",
+      nodes: [
+        { id: "n1", type: "sequence", category: "composite", name: "Root Seq",
+          children: ["n2", "n3"], parameters: {}, x: 100, y: 200 },
+        { id: "n2", type: "action", category: "leaf", name: "Move To",
+          children: [], parameters: { speed: 5 }, x: 50, y: 350 },
+        { id: "n3", type: "action", category: "leaf", name: "Attack",
+          children: [], parameters: { damage: 10 }, x: 200, y: 350 },
+      ],
+    };
+    const { tree, layout } = Serialization.toJSON(input);
+    const state = Serialization.fromJSON(tree, layout);
+
+    assert(state.title === "Chase Player",   "nodes: title survives");
+    assert(state.root === "n1",              "nodes: root survives");
+    assert(state.nodes.length === 3,         "nodes: node count");
+
+    const byId = Object.fromEntries(state.nodes.map(n => [n.id, n]));
+
+    assert(byId.n1.type === "sequence",              "nodes: n1 type");
+    assert(byId.n1.category === "composite",         "nodes: n1 category");
+    assert(byId.n1.name === "Root Seq",              "nodes: n1 name");
+    assert(eq(byId.n1.children, ["n2", "n3"]),       "nodes: n1 children");
+    assert(byId.n1.x === 100 && byId.n1.y === 200,  "nodes: n1 layout x/y");
+
+    assert(byId.n2.parameters.speed === 5,           "nodes: n2 parameters");
+    assert(byId.n2.x === 50 && byId.n2.y === 350,   "nodes: n2 layout x/y");
+
+    assert(byId.n3.parameters.damage === 10,         "nodes: n3 parameters");
+    assert(byId.n3.x === 200 && byId.n3.y === 350,  "nodes: n3 layout x/y");
+  })();
+
+  // ── 3. Optional fields round-trip (comment, color, disabled, description) ──
+  (() => {
+    const input = {
+      title: "Opt", description: "", root: "n1",
+      nodes: [
+        { id: "n1", type: "action", category: "leaf", name: "Foo",
+          children: [], parameters: {},
+          comment: "a note", color: "#ef4444", disabled: true, description: "does stuff",
+          x: 0, y: 0 },
+      ],
+    };
+    const { tree, layout } = Serialization.toJSON(input);
+    const state = Serialization.fromJSON(tree, layout);
+    const n = state.nodes[0];
+    assert(n.comment === "a note",       "optional: comment survives");
+    assert(n.color === "#ef4444",        "optional: color survives");
+    assert(n.disabled === true,          "optional: disabled survives");
+    assert(n.description === "does stuff", "optional: description survives");
+  })();
+
+  // ── 4. Optional fields absent — not written to JSON when falsy ─────────────
+  (() => {
+    const input = {
+      title: "NoOpt", description: "", root: "n1",
+      nodes: [
+        { id: "n1", type: "action", category: "leaf", name: "Bar",
+          children: [], parameters: {}, x: 0, y: 0 },
+      ],
+    };
+    const { tree } = Serialization.toJSON(input);
+    const entry = tree.nodes["n1"];
+    assert(!("comment"     in entry), "absent: comment not in JSON");
+    assert(!("color"       in entry), "absent: color not in JSON");
+    assert(!("disabled"    in entry), "absent: disabled not in JSON");
+    assert(!("description" in entry), "absent: description not in JSON");
+  })();
+
+  // ── 5. uid uniqueness (1000 samples) ──────────────────────────────────────
+  (() => {
+    const seen = new Set();
+    for (let i = 0; i < 1000; i++) seen.add(Serialization.uid());
+    assert(seen.size === 1000, "uid: no duplicates in 1000 samples");
+  })();
+
+  // ── 6. fromJSON handles missing layout entry (defaults x/y to 0) ──────────
+  (() => {
+    const input = {
+      title: "T", description: "", root: "n1",
+      nodes: [
+        { id: "n1", type: "action", category: "leaf", name: "X",
+          children: [], parameters: {}, x: 99, y: 88 },
+      ],
+    };
+    const { tree } = Serialization.toJSON(input);
+    // Pass layout with no node entries
+    const state = Serialization.fromJSON(tree, { version: "1.0", nodes: {} });
+    const n = state.nodes[0];
+    assert(n.x === 0 && n.y === 0, "missing layout: x/y default to 0");
+  })();
+</script>
+</body>
+</html>

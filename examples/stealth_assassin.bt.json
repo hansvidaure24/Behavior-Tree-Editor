@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "title": "Stealth Assassin",
+  "description": "Sneak toward target, check detection, backstab if undetected or flee if spotted",
+  "root": "a0000001",
+  "nodes": {
+    "a0000001": {
+      "id": "a0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["a0000002", "a000000b", "a000000e"],
+      "parameters": {}
+    },
+    "a0000002": {
+      "id": "a0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Backstab Sequence",
+      "children": ["a0000003", "a0000004", "a0000005", "a0000006"],
+      "parameters": {}
+    },
+    "a0000003": {
+      "id": "a0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Undetected",
+      "children": [],
+      "parameters": {"key": "detection_level", "op": "lt", "value": 0.3}
+    },
+    "a0000004": {
+      "id": "a0000004",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Target In Backstab Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 1.5}
+    },
+    "a0000005": {
+      "id": "a0000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Backstab",
+      "children": [],
+      "parameters": {"damage_multiplier": 3.0, "animation": "backstab"}
+    },
+    "a0000006": {
+      "id": "a0000006",
+      "type": "action",
+      "category": "leaf",
+      "name": "Vanish Into Shadows",
+      "children": [],
+      "parameters": {"stealth_duration": 4.0}
+    },
+    "a000000b": {
+      "id": "a000000b",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sneak Approach",
+      "children": ["a000000c", "a000000d"],
+      "parameters": {}
+    },
+    "a000000c": {
+      "id": "a000000c",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Undetected",
+      "children": [],
+      "parameters": {"key": "detection_level", "op": "lt", "value": 0.3}
+    },
+    "a000000d": {
+      "id": "a000000d",
+      "type": "action",
+      "category": "leaf",
+      "name": "Sneak Toward Target",
+      "children": [],
+      "parameters": {"speed": 1.5, "crouch": true, "avoid_light": true}
+    },
+    "a000000e": {
+      "id": "a000000e",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Flee If Spotted",
+      "children": ["a000000f", "a0000010"],
+      "parameters": {}
+    },
+    "a000000f": {
+      "id": "a000000f",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Detected",
+      "children": [],
+      "parameters": {"key": "detection_level", "op": "gte", "value": 0.8}
+    },
+    "a0000010": {
+      "id": "a0000010",
+      "type": "action",
+      "category": "leaf",
+      "name": "Flee To Safe Zone",
+      "children": [],
+      "parameters": {"speed": 6.0, "target": "nearest_shadow"}
+    }
+  }
+}

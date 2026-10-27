@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BehaviorTreeReplay",
+  "type": "object",
+  "required": ["version", "treeTitle", "ticks"],
+  "properties": {
+    "version": { "const": "1.0" },
+    "treeTitle": { "type": "string" },
+    "agentId": { "type": "string" },
+    "ticks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tick", "timestamp", "nodes"],
+        "properties": {
+          "tick": { "type": "integer" },
+          "timestamp": { "type": "number", "description": "Time.time in seconds" },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "enum": ["success", "failure", "running", "skipped"] }
+              }
+            }
+          },
+          "blackboard": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Snapshot of blackboard at this tick"
+          }
+        }
+      }
+    }
+  }
+}

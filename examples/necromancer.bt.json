@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "title": "Necromancer",
+  "description": "Summon minions, buff existing minions, drain life from range, flee if surrounded",
+  "root": "50000001",
+  "nodes": {
+    "50000001": {
+      "id": "50000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["50000002", "50000007", "5000000b", "50000010"],
+      "parameters": {}
+    },
+    "50000002": {
+      "id": "50000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Flee If Surrounded",
+      "children": ["50000003", "50000004"],
+      "parameters": {}
+    },
+    "50000003": {
+      "id": "50000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemies Too Close",
+      "children": [],
+      "parameters": {"key": "nearby_enemy_count", "op": "gt", "value": 2}
+    },
+    "50000004": {
+      "id": "50000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Teleport Away",
+      "children": [],
+      "parameters": {"teleport_distance": 12.0, "animation": "necro_teleport", "vfx": "shadow_blink"}
+    },
+    "50000007": {
+      "id": "50000007",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Summon Undead",
+      "children": ["50000008", "50000009"],
+      "parameters": {}
+    },
+    "50000008": {
+      "id": "50000008",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Minion Count Low",
+      "children": [],
+      "parameters": {"key": "active_minion_count", "op": "lt", "value": 3}
+    },
+    "50000009": {
+      "id": "50000009",
+      "type": "action",
+      "category": "leaf",
+      "name": "Raise Skeleton",
+      "children": [],
+      "parameters": {"summon_count": 1, "mana_cost": 30, "animation": "raise_dead_cast"}
+    },
+    "5000000b": {
+      "id": "5000000b",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Buff Minions",
+      "children": ["5000000c", "5000000d"],
+      "parameters": {}
+    },
+    "5000000c": {
+      "id": "5000000c",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Minions Unbuffed",
+      "children": [],
+      "parameters": {"key": "minions_have_buff", "op": "eq", "value": false}
+    },
+    "5000000d": {
+      "id": "5000000d",
+      "type": "action",
+      "category": "leaf",
+      "name": "Cast Dark Empowerment",
+      "children": [],
+      "parameters": {"buff_duration": 15.0, "damage_bonus": 0.25, "mana_cost": 20}
+    },
+    "50000010": {
+      "id": "50000010",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Drain Life",
+      "children": ["50000011", "50000012"],
+      "parameters": {}
+    },
+    "50000011": {
+      "id": "50000011",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Target In Drain Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 18.0}
+    },
+    "50000012": {
+      "id": "50000012",
+      "type": "action",
+      "category": "leaf",
+      "name": "Cast Drain Life",
+      "children": [],
+      "parameters": {"damage_per_sec": 12, "heal_per_sec": 6, "duration": 3.0, "animation": "drain_life_beam"}
+    }
+  }
+}

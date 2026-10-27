@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "title": "Civilian Panic",
+  "description": "Detect danger, scream, flee from threat, find shelter, hide until safe",
+  "root": "30000001",
+  "nodes": {
+    "30000001": {
+      "id": "30000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["30000002", "3000000a", "30000010"],
+      "parameters": {}
+    },
+    "30000002": {
+      "id": "30000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Hide In Shelter",
+      "children": ["30000003", "30000004", "30000005", "30000006"],
+      "parameters": {}
+    },
+    "30000003": {
+      "id": "30000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Near Shelter",
+      "children": [],
+      "parameters": {"key": "nearest_shelter_distance", "op": "lt", "value": 3.0}
+    },
+    "30000004": {
+      "id": "30000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Enter Shelter",
+      "children": [],
+      "parameters": {"animation": "door_open_enter", "set_state": "hiding"}
+    },
+    "30000005": {
+      "id": "30000005",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Danger Has Passed",
+      "children": [],
+      "parameters": {"key": "threat_level", "op": "lt", "value": 0.1}
+    },
+    "30000006": {
+      "id": "30000006",
+      "type": "action",
+      "category": "leaf",
+      "name": "Peek And Wait",
+      "children": [],
+      "parameters": {"animation": "peek_window", "wait_time": 5.0}
+    },
+    "3000000a": {
+      "id": "3000000a",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Flee And Find Shelter",
+      "children": ["3000000b", "3000000c", "3000000d"],
+      "parameters": {}
+    },
+    "3000000b": {
+      "id": "3000000b",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Threat Detected",
+      "children": [],
+      "parameters": {"key": "threat_level", "op": "gt", "value": 0.3}
+    },
+    "3000000c": {
+      "id": "3000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Scream",
+      "children": [],
+      "parameters": {"sound": "civilian_scream", "alert_others_radius": 12.0}
+    },
+    "3000000d": {
+      "id": "3000000d",
+      "type": "action",
+      "category": "leaf",
+      "name": "Flee Toward Shelter",
+      "children": [],
+      "parameters": {"speed": 5.0, "target": "nearest_shelter", "animation": "run_panic"}
+    },
+    "30000010": {
+      "id": "30000010",
+      "type": "action",
+      "category": "leaf",
+      "name": "Go About Daily Routine",
+      "children": [],
+      "parameters": {"routine": "wander_town", "speed": 1.5}
+    }
+  }
+}

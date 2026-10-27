@@ -1,0 +1,120 @@
+{
+  "version": "1.0",
+  "title": "Tank Aggro",
+  "description": "Taunt enemies, raise shield to block, absorb damage for allies, counterattack, rally allies when low",
+  "root": "60000001",
+  "nodes": {
+    "60000001": {
+      "id": "60000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["60000002", "60000007", "6000000b", "60000010"],
+      "parameters": {}
+    },
+    "60000002": {
+      "id": "60000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Rally Allies",
+      "children": ["60000003", "60000004", "60000005"],
+      "parameters": {}
+    },
+    "60000003": {
+      "id": "60000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Self Health Low",
+      "children": [],
+      "parameters": {"key": "self_health_pct", "op": "lt", "value": 0.3}
+    },
+    "60000004": {
+      "id": "60000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "War Cry",
+      "children": [],
+      "parameters": {"rally_radius": 12.0, "buff_duration": 8.0, "animation": "war_cry"}
+    },
+    "60000005": {
+      "id": "60000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Use Health Potion",
+      "children": [],
+      "parameters": {"heal_amount": 60, "animation": "drink_potion"}
+    },
+    "60000007": {
+      "id": "60000007",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Shield Block And Counter",
+      "children": ["60000008", "60000009", "6000000a"],
+      "parameters": {}
+    },
+    "60000008": {
+      "id": "60000008",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Being Attacked",
+      "children": [],
+      "parameters": {"key": "incoming_attack_detected", "op": "eq", "value": true}
+    },
+    "60000009": {
+      "id": "60000009",
+      "type": "action",
+      "category": "leaf",
+      "name": "Raise Shield",
+      "children": [],
+      "parameters": {"damage_reduction": 0.75, "animation": "shield_block"}
+    },
+    "6000000a": {
+      "id": "6000000a",
+      "type": "action",
+      "category": "leaf",
+      "name": "Shield Bash Counter",
+      "children": [],
+      "parameters": {"damage": 20, "stun_duration": 1.5, "animation": "shield_bash"}
+    },
+    "6000000b": {
+      "id": "6000000b",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Taunt And Hold Line",
+      "children": ["6000000c", "6000000d", "6000000e"],
+      "parameters": {}
+    },
+    "6000000c": {
+      "id": "6000000c",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemies In Range",
+      "children": [],
+      "parameters": {"key": "nearby_enemy_count", "op": "gt", "value": 0}
+    },
+    "6000000d": {
+      "id": "6000000d",
+      "type": "action",
+      "category": "leaf",
+      "name": "Taunt",
+      "children": [],
+      "parameters": {"taunt_radius": 10.0, "aggro_duration": 5.0, "animation": "taunt_gesture"}
+    },
+    "6000000e": {
+      "id": "6000000e",
+      "type": "action",
+      "category": "leaf",
+      "name": "Sword Slash",
+      "children": [],
+      "parameters": {"damage": 35, "animation": "sword_slash"}
+    },
+    "60000010": {
+      "id": "60000010",
+      "type": "action",
+      "category": "leaf",
+      "name": "Advance On Enemy",
+      "children": [],
+      "parameters": {"speed": 3.5, "formation": "shield_wall", "animation": "march_forward"}
+    }
+  }
+}

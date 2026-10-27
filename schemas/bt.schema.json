@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BehaviorTree",
+  "type": "object",
+  "required": ["version", "root", "nodes"],
+  "properties": {
+    "version": { "const": "1.0" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "root": { "type": "string", "description": "ID of the root node" },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/node" }
+    },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "editor": { "type": "string" },
+    "nodeCount": { "type": "integer" },
+    "depth": { "type": "integer", "description": "Maximum depth of the tree" },
+    "blackboardKeys": { "type": "array", "items": { "type": "string" }, "description": "Blackboard keys referenced by conditions/guards" },
+    "actionNames": { "type": "array", "items": { "type": "string" }, "description": "Action node names that need engine bindings" },
+    "conditionNames": { "type": "array", "items": { "type": "string" }, "description": "Condition node names that need engine bindings" }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["sequence", "selector", "parallel", "action", "condition", "invert", "repeat", "cooldown", "timeout", "guard"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["composite", "decorator", "leaf"]
+        },
+        "name": { "type": "string", "description": "Display name" },
+        "children": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered child node IDs"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Node-specific config"
+        },
+        "comment": { "type": "string" },
+        "color": { "type": "string", "description": "Custom node color (hex)" }
+      }
+    }
+  }
+}

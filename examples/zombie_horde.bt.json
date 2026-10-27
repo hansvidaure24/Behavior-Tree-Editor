@@ -1,0 +1,88 @@
+{
+  "version": "1.0",
+  "title": "Zombie Horde",
+  "description": "Wander aimlessly, detect living nearby, swarm toward target and bite",
+  "root": "e0000001",
+  "nodes": {
+    "e0000001": {
+      "id": "e0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["e0000002", "e0000009", "e000000e"],
+      "parameters": {}
+    },
+    "e0000002": {
+      "id": "e0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Bite Attack",
+      "children": ["e0000003", "e0000004", "e0000005"],
+      "parameters": {}
+    },
+    "e0000003": {
+      "id": "e0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Target In Bite Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 1.2}
+    },
+    "e0000004": {
+      "id": "e0000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Lunge At Target",
+      "children": [],
+      "parameters": {"lunge_distance": 1.0, "animation": "zombie_lunge"}
+    },
+    "e0000005": {
+      "id": "e0000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Bite",
+      "children": [],
+      "parameters": {"damage": 20, "infection_chance": 0.15, "animation": "zombie_bite"}
+    },
+    "e0000009": {
+      "id": "e0000009",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Swarm Toward Living",
+      "children": ["e000000a", "e000000b", "e000000c"],
+      "parameters": {}
+    },
+    "e000000a": {
+      "id": "e000000a",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Detects Living",
+      "children": [],
+      "parameters": {"key": "sound_or_sight_alert", "op": "eq", "value": true}
+    },
+    "e000000b": {
+      "id": "e000000b",
+      "type": "action",
+      "category": "leaf",
+      "name": "Moan Alert",
+      "children": [],
+      "parameters": {"alert_radius": 15.0, "sound": "zombie_moan"}
+    },
+    "e000000c": {
+      "id": "e000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Shamble Toward Target",
+      "children": [],
+      "parameters": {"speed": 1.8, "animation": "zombie_shamble"}
+    },
+    "e000000e": {
+      "id": "e000000e",
+      "type": "action",
+      "category": "leaf",
+      "name": "Wander Aimlessly",
+      "children": [],
+      "parameters": {"speed": 0.8, "wander_radius": 8.0, "direction_change_interval": 5.0}
+    }
+  }
+}

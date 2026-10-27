@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "treeTitle": "Guard Patrol",
+  "agentId": "Enemy_Guard_01",
+  "ticks": [
+    {
+      "tick": 0,
+      "timestamp": 0.000,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "failure"},
+        "has_target_cond": {"status": "failure"},
+        "patrol_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": false, "target_distance": 999, "position_x": 10.0, "position_z": 5.0}
+    },
+    {
+      "tick": 1,
+      "timestamp": 0.016,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "failure"},
+        "has_target_cond": {"status": "failure"},
+        "patrol_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": false, "target_distance": 999, "position_x": 10.5, "position_z": 5.0}
+    },
+    {
+      "tick": 2,
+      "timestamp": 0.033,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "failure"},
+        "has_target_cond": {"status": "failure"},
+        "patrol_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": false, "target_distance": 999, "position_x": 11.0, "position_z": 5.0}
+    },
+    {
+      "tick": 3,
+      "timestamp": 0.050,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "success"},
+        "has_target_cond": {"status": "success"},
+        "move_to_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 8.5, "position_x": 11.5, "position_z": 5.2}
+    },
+    {
+      "tick": 4,
+      "timestamp": 0.066,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "success"},
+        "has_target_cond": {"status": "success"},
+        "move_to_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 6.2, "position_x": 13.0, "position_z": 5.5}
+    },
+    {
+      "tick": 5,
+      "timestamp": 0.083,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "success"},
+        "has_target_cond": {"status": "success"},
+        "move_to_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 3.8, "position_x": 15.0, "position_z": 6.0}
+    },
+    {
+      "tick": 6,
+      "timestamp": 0.100,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "success"},
+        "in_range_cond": {"status": "success"},
+        "attack_act": {"status": "success"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 1.5, "position_x": 17.0, "position_z": 6.5}
+    },
+    {
+      "tick": 7,
+      "timestamp": 0.116,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "success"},
+        "in_range_cond": {"status": "success"},
+        "attack_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 1.2, "position_x": 17.2, "position_z": 6.5}
+    },
+    {
+      "tick": 8,
+      "timestamp": 0.133,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "success"},
+        "has_target_cond": {"status": "success"},
+        "move_to_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": true, "target_distance": 4.0, "position_x": 17.2, "position_z": 6.5}
+    },
+    {
+      "tick": 9,
+      "timestamp": 0.150,
+      "nodes": {
+        "root_sel": {"status": "success"},
+        "attack_seq": {"status": "failure"},
+        "in_range_cond": {"status": "failure"},
+        "chase_seq": {"status": "failure"},
+        "has_target_cond": {"status": "failure"},
+        "patrol_act": {"status": "running"}
+      },
+      "blackboard": {"has_target": false, "target_distance": 999, "position_x": 17.0, "position_z": 6.2}
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BehaviorTreeLayout",
+  "description": "Visual layout sidecar — never pollutes the logic file",
+  "type": "object",
+  "required": ["version", "nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["x", "y"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "type": "number" },
+          "y": { "type": "number" }
+        }
+      }
+    }
+  }
+}

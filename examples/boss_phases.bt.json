@@ -1,0 +1,160 @@
+{
+  "version": "1.0",
+  "title": "Boss Phases",
+  "description": "Multi-phase boss: ranged attacks at distance, melee up close, enrages at low health",
+  "root": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["enrage_seq", "melee_seq", "ranged_seq", "reposition_act"],
+      "parameters": {}
+    },
+    "enrage_seq": {
+      "id": "enrage_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Enrage Phase",
+      "children": ["low_hp_cond", "enrage_guard"],
+      "parameters": {}
+    },
+    "low_hp_cond": {
+      "id": "low_hp_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Health Below 30%",
+      "children": [],
+      "parameters": {"key": "health_pct", "op": "lt", "value": 0.3}
+    },
+    "enrage_guard": {
+      "id": "enrage_guard",
+      "type": "guard",
+      "category": "decorator",
+      "name": "Not Already Enraged",
+      "children": ["enrage_par"],
+      "parameters": {"key": "is_enraged", "expected": false}
+    },
+    "enrage_par": {
+      "id": "enrage_par",
+      "type": "parallel",
+      "category": "composite",
+      "name": "Enrage Behavior",
+      "children": ["buff_act", "slam_repeat"],
+      "parameters": {"policy": "fail_on_one"}
+    },
+    "buff_act": {
+      "id": "buff_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Apply Damage Buff",
+      "children": [],
+      "parameters": {"multiplier": 2.0, "set_key": "is_enraged"}
+    },
+    "slam_repeat": {
+      "id": "slam_repeat",
+      "type": "repeat",
+      "category": "decorator",
+      "name": "Slam x3",
+      "children": ["slam_act"],
+      "parameters": {"count": 3}
+    },
+    "slam_act": {
+      "id": "slam_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Ground Slam",
+      "children": [],
+      "parameters": {"damage": 40, "radius": 5.0, "animation": "slam"}
+    },
+    "melee_seq": {
+      "id": "melee_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Melee Phase",
+      "children": ["close_cond", "melee_sel"],
+      "parameters": {}
+    },
+    "close_cond": {
+      "id": "close_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Player Close",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 4.0}
+    },
+    "melee_sel": {
+      "id": "melee_sel",
+      "type": "selector",
+      "category": "composite",
+      "name": "Melee Attacks",
+      "children": ["combo_cooldown", "swipe_act"],
+      "parameters": {}
+    },
+    "combo_cooldown": {
+      "id": "combo_cooldown",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Combo Cooldown",
+      "children": ["combo_act"],
+      "parameters": {"duration": 4.0}
+    },
+    "combo_act": {
+      "id": "combo_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "3-Hit Combo",
+      "children": [],
+      "parameters": {"damage": 20, "hits": 3, "animation": "combo"}
+    },
+    "swipe_act": {
+      "id": "swipe_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Claw Swipe",
+      "children": [],
+      "parameters": {"damage": 12, "animation": "swipe"}
+    },
+    "ranged_seq": {
+      "id": "ranged_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Ranged Phase",
+      "children": ["far_cond", "ranged_cooldown"],
+      "parameters": {}
+    },
+    "far_cond": {
+      "id": "far_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Player Far",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "gt", "value": 8.0}
+    },
+    "ranged_cooldown": {
+      "id": "ranged_cooldown",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Fireball Cooldown",
+      "children": ["fireball_act"],
+      "parameters": {"duration": 2.5}
+    },
+    "fireball_act": {
+      "id": "fireball_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Throw Fireball",
+      "children": [],
+      "parameters": {"damage": 30, "speed": 15.0, "animation": "cast_fire"}
+    },
+    "reposition_act": {
+      "id": "reposition_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Reposition",
+      "children": [],
+      "parameters": {"target_distance": 6.0, "speed": 4.0}
+    }
+  }
+}

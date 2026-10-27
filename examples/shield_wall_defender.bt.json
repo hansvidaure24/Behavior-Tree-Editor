@@ -1,0 +1,316 @@
+{
+  "version": "1.0",
+  "title": "Shield Wall Defender",
+  "description": "Formation-based defender: holds shield wall, breaks to intercept flankers, rallies when formation breaks",
+  "root": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "selector",
+      "category": "composite",
+      "name": "Defender AI",
+      "children": ["critical_branch", "combat_branch", "formation_branch", "idle_branch"],
+      "parameters": {}
+    },
+    "critical_branch": {
+      "id": "critical_branch",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Critical Response",
+      "children": ["hp_check", "retreat_guard"],
+      "parameters": {}
+    },
+    "hp_check": {
+      "id": "hp_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Health Below 15%",
+      "children": [],
+      "parameters": {"key": "health_pct", "op": "lt", "value": 0.15},
+      "description": "Triggers emergency retreat when critically wounded"
+    },
+    "retreat_guard": {
+      "id": "retreat_guard",
+      "type": "guard",
+      "category": "decorator",
+      "name": "Retreat Guard",
+      "children": ["retreat_seq"],
+      "parameters": {"condition": "not_rooted"}
+    },
+    "retreat_seq": {
+      "id": "retreat_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Retreat Steps",
+      "children": ["raise_shield", "retreat_act", "call_medic"],
+      "parameters": {}
+    },
+    "raise_shield": {
+      "id": "raise_shield",
+      "type": "action",
+      "category": "leaf",
+      "name": "Raise Shield",
+      "children": [],
+      "parameters": {"animation": "shield_up", "block_pct": 0.8}
+    },
+    "retreat_act": {
+      "id": "retreat_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Fall Back to Rally Point",
+      "children": [],
+      "parameters": {"target": "rally_point", "speed": 3.0}
+    },
+    "call_medic": {
+      "id": "call_medic",
+      "type": "action",
+      "category": "leaf",
+      "name": "Signal For Aid",
+      "children": [],
+      "parameters": {"signal": "need_healing", "radius": 8.0}
+    },
+    "combat_branch": {
+      "id": "combat_branch",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Combat",
+      "children": ["threat_check", "combat_selector"],
+      "parameters": {}
+    },
+    "threat_check": {
+      "id": "threat_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemies In Range",
+      "children": [],
+      "parameters": {"key": "enemies_nearby", "op": "gt", "value": 0},
+      "description": "Checks if any enemies are within engagement range"
+    },
+    "combat_selector": {
+      "id": "combat_selector",
+      "type": "selector",
+      "category": "composite",
+      "name": "Pick Response",
+      "children": ["intercept_branch", "shield_bash_branch", "hold_and_strike"],
+      "parameters": {}
+    },
+    "intercept_branch": {
+      "id": "intercept_branch",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Intercept Flanker",
+      "children": ["flanker_check", "intercept_cooldown"],
+      "parameters": {}
+    },
+    "flanker_check": {
+      "id": "flanker_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Flanker Detected",
+      "children": [],
+      "parameters": {"key": "flanker_angle", "op": "gt", "value": 90}
+    },
+    "intercept_cooldown": {
+      "id": "intercept_cooldown",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Intercept Cooldown",
+      "children": ["intercept_seq"],
+      "parameters": {"duration": 4.0}
+    },
+    "intercept_seq": {
+      "id": "intercept_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Intercept Steps",
+      "children": ["break_formation", "charge_flanker", "rejoin"],
+      "parameters": {}
+    },
+    "break_formation": {
+      "id": "break_formation",
+      "type": "action",
+      "category": "leaf",
+      "name": "Break Formation",
+      "children": [],
+      "parameters": {"signal": "breaking_line"}
+    },
+    "charge_flanker": {
+      "id": "charge_flanker",
+      "type": "action",
+      "category": "leaf",
+      "name": "Charge Flanker",
+      "children": [],
+      "parameters": {"speed": 6.0, "target": "nearest_flanker"}
+    },
+    "rejoin": {
+      "id": "rejoin",
+      "type": "action",
+      "category": "leaf",
+      "name": "Rejoin Formation",
+      "children": [],
+      "parameters": {"target": "formation_slot", "speed": 4.0}
+    },
+    "shield_bash_branch": {
+      "id": "shield_bash_branch",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Shield Bash",
+      "children": ["close_range_check", "bash_cooldown"],
+      "parameters": {}
+    },
+    "close_range_check": {
+      "id": "close_range_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemy In Melee",
+      "children": [],
+      "parameters": {"key": "closest_enemy_dist", "op": "lt", "value": 1.5}
+    },
+    "bash_cooldown": {
+      "id": "bash_cooldown",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Bash Cooldown",
+      "children": ["bash_act"],
+      "parameters": {"duration": 3.0}
+    },
+    "bash_act": {
+      "id": "bash_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Shield Bash",
+      "children": [],
+      "parameters": {"damage": 10, "stagger": 1.5, "animation": "shield_bash"}
+    },
+    "hold_and_strike": {
+      "id": "hold_and_strike",
+      "type": "parallel",
+      "category": "composite",
+      "name": "Hold & Strike",
+      "children": ["maintain_block", "counter_timeout"],
+      "parameters": {"policy": "require_one"}
+    },
+    "maintain_block": {
+      "id": "maintain_block",
+      "type": "action",
+      "category": "leaf",
+      "name": "Maintain Block",
+      "children": [],
+      "parameters": {"block_angle": 120, "animation": "shield_hold"}
+    },
+    "counter_timeout": {
+      "id": "counter_timeout",
+      "type": "timeout",
+      "category": "decorator",
+      "name": "Strike Window",
+      "children": ["counter_strike"],
+      "parameters": {"duration": 0.8}
+    },
+    "counter_strike": {
+      "id": "counter_strike",
+      "type": "action",
+      "category": "leaf",
+      "name": "Counter Strike",
+      "children": [],
+      "parameters": {"damage": 20, "animation": "quick_thrust"},
+      "description": "Quick spear thrust between shield blocks"
+    },
+    "formation_branch": {
+      "id": "formation_branch",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Formation Duty",
+      "children": ["has_slot_check", "formation_selector"],
+      "parameters": {}
+    },
+    "has_slot_check": {
+      "id": "has_slot_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Formation Slot",
+      "children": [],
+      "parameters": {"key": "formation_slot", "op": "neq", "value": null}
+    },
+    "formation_selector": {
+      "id": "formation_selector",
+      "type": "selector",
+      "category": "composite",
+      "name": "Formation Actions",
+      "children": ["move_to_slot", "hold_position"],
+      "parameters": {}
+    },
+    "move_to_slot": {
+      "id": "move_to_slot",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Move to Slot",
+      "children": ["not_in_position", "march_act"],
+      "parameters": {}
+    },
+    "not_in_position": {
+      "id": "not_in_position",
+      "type": "invert",
+      "category": "decorator",
+      "name": "Not In Position",
+      "children": ["in_position_check"],
+      "parameters": {}
+    },
+    "in_position_check": {
+      "id": "in_position_check",
+      "type": "condition",
+      "category": "leaf",
+      "name": "At Formation Slot",
+      "children": [],
+      "parameters": {"key": "slot_distance", "op": "lt", "value": 0.5}
+    },
+    "march_act": {
+      "id": "march_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "March to Slot",
+      "children": [],
+      "parameters": {"target": "formation_slot", "speed": 3.5, "animation": "march"}
+    },
+    "hold_position": {
+      "id": "hold_position",
+      "type": "repeat",
+      "category": "decorator",
+      "name": "Hold Repeat",
+      "children": ["hold_act"],
+      "parameters": {"count": -1}
+    },
+    "hold_act": {
+      "id": "hold_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Hold Position",
+      "children": [],
+      "parameters": {"animation": "shield_wall_idle", "facing": "forward"},
+      "description": "Stand firm in formation with shield raised"
+    },
+    "idle_branch": {
+      "id": "idle_branch",
+      "type": "selector",
+      "category": "composite",
+      "name": "Idle",
+      "children": ["wander_act", "rest_act"],
+      "parameters": {}
+    },
+    "wander_act": {
+      "id": "wander_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Wander Near Post",
+      "children": [],
+      "parameters": {"radius": 5.0, "speed": 1.5}
+    },
+    "rest_act": {
+      "id": "rest_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Rest",
+      "children": [],
+      "parameters": {"animation": "idle_lean", "duration": 3.0}
+    }
+  }
+}

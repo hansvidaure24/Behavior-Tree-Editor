@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "title": "Turret Defense",
+  "description": "Scan for targets, aim, fire burst, then cooldown before reloading",
+  "root": "c0000001",
+  "nodes": {
+    "c0000001": {
+      "id": "c0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["c0000002", "c000000c"],
+      "parameters": {}
+    },
+    "c0000002": {
+      "id": "c0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Engage Target",
+      "children": ["c0000003", "c0000004", "c0000005", "c0000007", "c000000a"],
+      "parameters": {}
+    },
+    "c0000003": {
+      "id": "c0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Target In Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 30.0}
+    },
+    "c0000004": {
+      "id": "c0000004",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Ammo",
+      "children": [],
+      "parameters": {"key": "ammo_count", "op": "gt", "value": 0}
+    },
+    "c0000005": {
+      "id": "c0000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Aim At Target",
+      "children": [],
+      "parameters": {"rotation_speed": 120.0, "lead_factor": 0.3}
+    },
+    "c0000007": {
+      "id": "c0000007",
+      "type": "action",
+      "category": "leaf",
+      "name": "Fire Burst",
+      "children": [],
+      "parameters": {"shots": 3, "fire_rate": 0.15, "damage": 25}
+    },
+    "c000000a": {
+      "id": "c000000a",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Fire Cooldown",
+      "children": ["c000000b"],
+      "parameters": {"duration": 1.5}
+    },
+    "c000000b": {
+      "id": "c000000b",
+      "type": "action",
+      "category": "leaf",
+      "name": "Reload",
+      "children": [],
+      "parameters": {"reload_time": 2.0, "ammo_refill": 30}
+    },
+    "c000000c": {
+      "id": "c000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Scan Sector",
+      "children": [],
+      "parameters": {"sweep_angle": 120.0, "sweep_speed": 30.0}
+    }
+  }
+}

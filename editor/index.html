@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Behavior Tree Editor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16213e">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta name="description" content="Visual behavior tree editor for game AI — author, debug, and export behavior trees">
+</head>
+<body>
+  <div id="toolbar" role="toolbar" aria-label="Main toolbar">
+    <button id="btn-new" title="New Tree (Ctrl+N)" class="tb-icon" aria-label="New Tree">📄</button>
+    <button id="btn-save" title="Save (Ctrl+S)" class="tb-icon" aria-label="Save">💾</button>
+    <button id="btn-load" title="Load" class="tb-icon" aria-label="Load tree">📂</button>
+    <button id="btn-folder" title="Open Folder" class="tb-icon" aria-label="Open project folder" style="font-size:10px !important;">📁</button>
+    <button id="btn-export" title="Export (Ctrl+E)" class="tb-icon" aria-label="Export">⬇</button>
+    <button id="btn-png" title="Export PNG" class="tb-icon hidden" aria-label="Export PNG">🖼</button>
+    <button id="btn-svg" title="Export SVG" class="tb-icon hidden" aria-label="Export SVG" style="font-size:10px !important;">SVG</button>
+    <button id="btn-json-preview" title="Preview JSON (J)" class="tb-icon" aria-label="Preview JSON">{ }</button>
+    <button id="btn-bb-viewer" title="Blackboard Keys (Shift+K)" class="tb-icon" aria-label="Blackboard Keys">⬡</button>
+    <span class="sep"></span>
+    <button id="btn-undo" title="Undo (Ctrl+Z)" class="tb-icon">↩</button>
+    <button id="btn-redo" title="Redo (Ctrl+Shift+Z)" class="tb-icon">↪</button>
+    <span class="sep"></span>
+    <button id="btn-layout" title="Auto-layout" class="tb-icon">⊞</button>
+    <button id="btn-delete" title="Delete (Del)" class="tb-icon">🗑</button>
+    <span class="sep"></span>
+    <button id="btn-ai" title="Generate tree from description (AI)" class="tb-icon tb-ai">✨</button>
+    <button id="btn-replay" title="Load Replay" class="tb-icon">▶</button>
+    <span class="sep"></span>
+    <button id="btn-zoom-in" title="Zoom In (+)" class="tb-icon">+</button>
+    <button id="btn-zoom-out" title="Zoom Out (-)" class="tb-icon">−</button>
+    <button id="btn-zoom-fit" title="Fit All (Ctrl+0)" class="tb-icon">⊡</button>
+    <span id="zoom-level" class="zoom-level" title="Click to reset zoom, Shift+click for presets">100%</span>
+    <button id="btn-theme" title="Toggle light/dark theme" class="tb-icon">◑</button>
+    <button id="btn-help" title="Shortcuts (?)" class="tb-icon">?</button>
+    <span id="warning-badge" class="warning-badge hidden" title="Click to see warnings"></span>
+    <span id="autosave-indicator" class="autosave-indicator"></span>
+    <span id="tree-title">Untitled</span>
+    <span id="node-count" style="font-size:10px;color:#555;margin-left:8px;"></span>
+  </div>
+
+  <div id="tab-bar"><button id="tab-add" title="New tab (+)">+</button></div>
+  <div id="breadcrumb" class="breadcrumb"></div>
+  <div id="main">
+    <div id="palette" role="complementary" aria-label="Node palette">
+      <h3>Nodes</h3>
+      <input type="text" id="palette-filter" placeholder="Filter..." spellcheck="false">
+      <div class="palette-section">Composites</div>
+      <div class="palette-item" data-type="sequence" data-category="composite" draggable="true" title="Runs children left-to-right; fails on first failure">
+        <span class="palette-icon">→</span> Sequence
+      </div>
+      <div class="palette-item" data-type="selector" data-category="composite" draggable="true" title="Runs children left-to-right; succeeds on first success">
+        <span class="palette-icon">?</span> Selector
+      </div>
+      <div class="palette-item" data-type="parallel" data-category="composite" draggable="true" title="Runs all children simultaneously">
+        <span class="palette-icon">∥</span> Parallel
+      </div>
+      <div class="palette-section">Leaves</div>
+      <div class="palette-item" data-type="action" data-category="leaf" draggable="true" title="Leaf node that performs a game action">
+        <span class="palette-icon">▶</span> Action
+      </div>
+      <div class="palette-item" data-type="condition" data-category="leaf" draggable="true" title="Leaf node that checks a boolean condition">
+        <span class="palette-icon">✔</span> Condition
+      </div>
+      <div class="palette-section">Decorators</div>
+      <div class="palette-item" data-type="invert" data-category="decorator" draggable="true" title="Inverts child result (success to failure)">
+        <span class="palette-icon">!</span> Invert
+      </div>
+      <div class="palette-item" data-type="repeat" data-category="decorator" draggable="true" title="Repeats child N times">
+        <span class="palette-icon">↻</span> Repeat
+      </div>
+      <div class="palette-item" data-type="cooldown" data-category="decorator" draggable="true" title="Blocks re-entry for a duration after running">
+        <span class="palette-icon">⏱</span> Cooldown
+      </div>
+      <div class="palette-item" data-type="timeout" data-category="decorator" draggable="true" title="Fails child if it runs too long">
+        <span class="palette-icon">⏰</span> Timeout
+      </div>
+      <div class="palette-item" data-type="guard" data-category="decorator" draggable="true" title="Runs child only if a condition is met">
+        <span class="palette-icon">⛨</span> Guard
+      </div>
+      <div class="palette-section">Templates</div>
+      <div class="palette-item template-item" data-template="check-then-act" draggable="false" title="Sequence: check condition then perform action" style="background:#16213e;color:#53a8b6;border:1px dashed #53a8b644;cursor:pointer;">
+        <span class="palette-icon">📋</span> Check → Act
+      </div>
+      <div class="palette-item template-item" data-template="try-fallback" draggable="false" title="Selector: try primary, fallback to secondary" style="background:#16213e;color:#53a8b6;border:1px dashed #53a8b644;cursor:pointer;">
+        <span class="palette-icon">📋</span> Try / Fallback
+      </div>
+      <div class="palette-item template-item" data-template="cooldown-action" draggable="false" title="Action wrapped in cooldown decorator" style="background:#16213e;color:#53a8b6;border:1px dashed #53a8b644;cursor:pointer;">
+        <span class="palette-icon">📋</span> Cooldown Act
+      </div>
+      <div class="palette-item template-item" data-template="guarded-sequence" draggable="false" title="Guard → Sequence with condition and action" style="background:#16213e;color:#53a8b6;border:1px dashed #53a8b644;cursor:pointer;">
+        <span class="palette-icon">📋</span> Guarded Seq
+      </div>
+      <div class="palette-section" id="user-templates-section" style="display:none;">My Templates</div>
+      <div id="user-templates-list"></div>
+    </div>
+
+    <div id="resizer-left" class="panel-resizer"></div>
+    <canvas id="canvas" role="application" aria-label="Behavior tree canvas"></canvas>
+    <div id="empty-examples" class="empty-examples hidden">
+      <div class="empty-hints">
+        <span><kbd>Double-click</kbd> to add a node</span>
+        <span><kbd>1</kbd>-<kbd>9</kbd> quick add</span>
+        <span><kbd>Ctrl+P</kbd> command palette</span>
+        <span><kbd>?</kbd> all shortcuts</span>
+      </div>
+      <div class="empty-examples-label">or try AI generate:</div>
+      <div class="empty-examples-row">
+        <button id="empty-ai-btn" class="empty-ex-btn" style="background:#2a1a4e;border-color:#c77dff44;color:#c77dff;">✨ AI Generate Tree</button>
+      </div>
+      <div class="empty-examples-label">or load an example:</div>
+      <div class="empty-examples-row">
+        <button data-example="guard_patrol" class="empty-ex-btn">Guard Patrol</button>
+        <button data-example="chase_attack_flee" class="empty-ex-btn">Chase / Attack / Flee</button>
+        <button data-example="boss_phases" class="empty-ex-btn">Boss Phases</button>
+        <button data-example="shield_wall_defender" class="empty-ex-btn">Shield Wall Defender</button>
+        <button data-example="guard_investigate" class="empty-ex-btn">Guard Investigate</button>
+      </div>
+    </div>
+    <div id="resizer-right" class="panel-resizer"></div>
+
+    <div id="properties" role="complementary" aria-label="Node properties">
+      <h3>Properties</h3>
+      <div id="props-content">
+        <p class="hint">Select a node to edit</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay timeline bar -->
+  <div id="replay-bar" class="hidden">
+    <div id="replay-controls">
+      <button id="replay-step-back" title="Step Back (←)">⏮</button>
+      <button id="replay-play" title="Play/Pause (Space)">▶</button>
+      <button id="replay-step-fwd" title="Step Forward (→)">⏭</button>
+      <input type="range" id="replay-slider" min="0" max="0" value="0">
+      <span id="replay-tick-label">0 / 0</span>
+      <select id="replay-speed" title="Playback speed">
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+      </select>
+      <button id="replay-close" title="Close Replay">✕</button>
+    </div>
+    <div id="replay-legend">
+      <span class="legend-dot" style="background:#22c55e"></span>Success
+      <span class="legend-dot" style="background:#ef4444"></span>Failure
+      <span class="legend-dot" style="background:#f59e0b"></span>Running
+      <span class="legend-dot" style="background:#555555"></span>Skipped
+    </div>
+  </div>
+
+  <!-- Blackboard viewer (during replay) -->
+  <div id="blackboard-panel" class="hidden">
+    <h3>Blackboard</h3>
+    <div id="blackboard-content"></div>
+  </div>
+
+  <div id="minimap-container">
+    <canvas id="minimap"></canvas>
+  </div>
+
+  <!-- Load dialog -->
+  <div id="load-dialog" class="dialog hidden">
+    <div class="dialog-inner">
+      <h3>Load Tree</h3>
+      <input type="text" id="load-filter" placeholder="Filter trees..." spellcheck="false" style="width:100%;padding:7px 10px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:13px;outline:none;font-family:inherit;margin-bottom:8px;">
+      <div id="load-list"></div>
+      <button id="load-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Save dialog -->
+  <div id="save-dialog" class="dialog hidden">
+    <div class="dialog-inner">
+      <h3>Save Tree</h3>
+      <label>Filename: <input type="text" id="save-filename" placeholder="my-tree" spellcheck="false"></label>
+      <div class="dialog-buttons">
+        <button id="save-confirm">Save</button>
+        <button id="save-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay load dialog -->
+  <div id="replay-dialog" class="dialog hidden">
+    <div class="dialog-inner">
+      <h3>Load Replay</h3>
+      <div id="replay-list"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="replay-simulate" title="Generate a simulated replay from the current tree">Simulate</button>
+        <button id="replay-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help dialog -->
+  <div id="help-dialog" class="dialog hidden">
+    <div class="dialog-inner help-inner">
+      <h3>Keyboard Shortcuts</h3>
+      <table class="help-table">
+        <tr><th colspan="2" class="help-cat">Creating &amp; Selecting</th></tr>
+        <tr><td><kbd>Drag</kbd> from palette</td><td>Create node</td></tr>
+        <tr><td><kbd>Double-click</kbd> empty area</td><td>Create action node</td></tr>
+        <tr><td><kbd>1</kbd>-<kbd>9</kbd></td><td>Quick add: seq / sel / act / cond / inv / rep / cool / par / guard</td></tr>
+        <tr><td><kbd>/</kbd></td><td>Focus palette filter (type + Enter to add)</td></tr>
+        <tr><td><kbd>Click</kbd> node</td><td>Select</td></tr>
+        <tr><td><kbd>Shift+Click</kbd> / <kbd>Ctrl+Click</kbd></td><td>Multi-select</td></tr>
+        <tr><td><kbd>Alt+Click</kbd> node</td><td>Select path from root</td></tr>
+        <tr><td><kbd>Drag</kbd> empty area</td><td>Box select</td></tr>
+        <tr><td><kbd>Ctrl+A</kbd></td><td>Select all</td></tr>
+        <tr><td><kbd>Ctrl+Shift+A</kbd></td><td>Select all of same type</td></tr>
+        <tr><td><kbd>S</kbd></td><td>Select entire subtree</td></tr>
+        <tr><td><kbd>Shift+S</kbd></td><td>Select direct children</td></tr>
+        <tr><td><kbd>Shift+A</kbd></td><td>Select all siblings</td></tr>
+        <tr><td><kbd>Shift+drag</kbd> empty canvas</td><td>Box deselect (subtract from selection)</td></tr>
+        <tr><th colspan="2" class="help-cat">Connections</th></tr>
+        <tr><td><kbd>Drag</kbd> output port → node</td><td>Connect</td></tr>
+        <tr><td><kbd>Drag</kbd> input port</td><td>Disconnect &amp; re-route</td></tr>
+        <tr><td><kbd>K</kbd></td><td>Connect selected to... (click target)</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Disconnect selected from parent</td></tr>
+        <tr><td><kbd>Right-click</kbd> connection</td><td>Delete connection</td></tr>
+        <tr><th colspan="2" class="help-cat">Navigation</th></tr>
+        <tr><td><kbd>Space+Drag</kbd> / <kbd>Alt+Drag</kbd></td><td>Pan</td></tr>
+        <tr><td><kbd>Scroll</kbd> / <kbd>Two-finger</kbd></td><td>Pan</td></tr>
+        <tr><td><kbd>Pinch</kbd> / <kbd>Ctrl+Scroll</kbd></td><td>Zoom</td></tr>
+        <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in / out</td></tr>
+        <tr><td><kbd>Ctrl+0</kbd></td><td>Fit all in view</td></tr>
+        <tr><td><kbd>Ctrl+1</kbd></td><td>Zoom to selection</td></tr>
+        <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Select parent / first child</td></tr>
+        <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Select prev / next sibling</td></tr>
+        <tr><td><kbd>Ctrl+Shift+↓</kbd></td><td>Select entire subtree (descendants)</td></tr>
+        <tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Cycle through nodes (depth-first)</td></tr>
+        <tr><td><kbd>I</kbd></td><td>Quick info for selected node</td></tr>
+        <tr><td><kbd>F</kbd></td><td>Frame selection / fit all</td></tr>
+        <tr><td><kbd>R</kbd></td><td>Focus root node</td></tr>
+        <tr><td><kbd>Home</kbd></td><td>Center on selection / fit all</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Toggle minimap</td></tr>
+        <tr><th colspan="2" class="help-cat">Editing</th></tr>
+        <tr><td><kbd>Double-click</kbd> node / <kbd>F2</kbd></td><td>Edit name</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Change selected node type</td></tr>
+        <tr><td><kbd>Q</kbd></td><td>Cycle type within same category</td></tr>
+        <tr><td><kbd>Shift+1</kbd>-<kbd>9</kbd></td><td>Change selected to: seq / sel / act / cond / inv / rep / cool / par / guard</td></tr>
+        <tr><td><kbd>D</kbd></td><td>Duplicate selected</td></tr>
+        <tr><td><kbd>Shift+D</kbd></td><td>Duplicate entire subtree</td></tr>
+        <tr><td><kbd>W</kbd></td><td>Wrap selected in decorator</td></tr>
+        <tr><td><kbd>U</kbd></td><td>Unwrap decorator (remove, keep child)</td></tr>
+        <tr><td><kbd>Ctrl+Shift+G</kbd></td><td>Group selected into Sequence</td></tr>
+        <tr><td><kbd>Ctrl+Arrow</kbd></td><td>Nudge selected nodes</td></tr>
+        <tr><td><kbd>Shift+X</kbd></td><td>Swap positions of 2 selected nodes</td></tr>
+        <tr><td><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd></td><td>Reorder node in parent</td></tr>
+        <tr><td><kbd>Ctrl+Enter</kbd></td><td>Add child action node</td></tr>
+        <tr><td><kbd>B</kbd></td><td>Toggle bookmark on selected node</td></tr>
+        <tr><td><kbd>Shift+B</kbd></td><td>Cycle through bookmarks</td></tr>
+        <tr><td><kbd>Delete</kbd></td><td>Delete selected</td></tr>
+        <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo</td></tr>
+        <tr><td><kbd>Ctrl+Shift+Z</kbd></td><td>Redo</td></tr>
+        <tr><th colspan="2" class="help-cat">Tree Structure</th></tr>
+        <tr><td><kbd>C</kbd></td><td>Collapse/expand subtree</td></tr>
+        <tr><td><kbd>Shift+C</kbd></td><td>Collapse/expand all</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Collapse all except path to selected</td></tr>
+        <tr><td><kbd>L</kbd></td><td>Auto-layout</td></tr>
+        <tr><td><kbd>Shift+L</kbd></td><td>Lock/unlock node positions</td></tr>
+        <tr><td><kbd>G</kbd></td><td>Toggle snap to grid</td></tr>
+        <tr><td><kbd>Ctrl+G</kbd></td><td>Cycle color on selected nodes</td></tr>
+        <tr><td><kbd>Ctrl+/</kbd></td><td>Add/edit comment on selected</td></tr>
+        <tr><td><kbd>E</kbd></td><td>Extract subtree to clipboard</td></tr>
+        <tr><th colspan="2" class="help-cat">File &amp; Search</th></tr>
+        <tr><td><kbd>Ctrl+N</kbd></td><td>New tree</td></tr>
+        <tr><td><kbd>Ctrl+S</kbd></td><td>Save to server</td></tr>
+        <tr><td><kbd>Ctrl+Shift+S</kbd></td><td>Save As (new name)</td></tr>
+        <tr><td><kbd>Ctrl+E</kbd></td><td>Export / download JSON</td></tr>
+        <tr><td><kbd>Ctrl+O</kbd></td><td>Import .bt.json file</td></tr>
+        <tr><td><kbd>Ctrl+Shift+C</kbd></td><td>Copy node path (1 sel) / JSON (multi)</td></tr>
+        <tr><td><kbd>Ctrl+V</kbd></td><td>Paste tree from clipboard</td></tr>
+        <tr><td><kbd>Ctrl+F</kbd></td><td>Find node by name</td></tr>
+        <tr><td><kbd>Ctrl+H</kbd></td><td>Find &amp; replace in names</td></tr>
+        <tr><td><kbd>Ctrl+P</kbd></td><td>Command palette</td></tr>
+        <tr><td><kbd>J</kbd></td><td>Toggle JSON preview</td></tr>
+        <tr><td><kbd>N</kbd></td><td>Next warning (cycle)</td></tr>
+        <tr><td><kbd>Ctrl+Shift+D</kbd></td><td>Toggle disable selected nodes</td></tr>
+        <tr><td><kbd>Ctrl+Shift+L</kbd></td><td>Cycle connection style (bezier/straight/step)</td></tr>
+        <tr><td><kbd>O</kbd></td><td>Toggle execution order overlay</td></tr>
+        <tr><td><kbd>.</kbd></td><td>Toggle flow animation dots</td></tr>
+        <tr><td><kbd>Z</kbd></td><td>Zoom to subtree / selection</td></tr>
+        <tr><td><kbd>Shift+P</kbd></td><td>Reparent — click new parent</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Isolate subtree (focus mode)</td></tr>
+        <tr><th colspan="2" class="help-cat">Tabs</th></tr>
+        <tr><td><kbd>Ctrl+Shift+T</kbd></td><td>New tab</td></tr>
+        <tr><td><kbd>Ctrl+W</kbd></td><td>Close current tab</td></tr>
+        <tr><td><kbd>Ctrl+PageUp/Down</kbd></td><td>Switch tabs</td></tr>
+        <tr><td><kbd>Ctrl+Shift+I</kbd></td><td>Tree statistics</td></tr>
+        <tr><td><kbd>Ctrl+B</kbd></td><td>Toggle palette panel</td></tr>
+        <tr><td><kbd>Ctrl+\</kbd></td><td>Toggle properties panel</td></tr>
+        <tr><td><kbd>Ctrl+Shift+O</kbd></td><td>Toggle tree outline</td></tr>
+        <tr><td><kbd>Ctrl+Shift+K</kbd></td><td>Toggle blackboard key viewer</td></tr>
+        <tr><td><kbd>?</kbd></td><td>This help</td></tr>
+        <tr><th colspan="2" class="help-cat">Replay</th></tr>
+        <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Step replay back/forward</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Play/pause replay</td></tr>
+        <tr><td><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd></td><td>Jump to status change (select a node first)</td></tr>
+        <tr><td><kbd>H</kbd></td><td>Toggle heatmap (visit frequency)</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Close replay</td></tr>
+      </table>
+      <p style="margin-top:14px;color:#666;font-size:11px;">Double-click the title bar to rename your tree. Double-click an output port to collapse. Click minimap to navigate.</p>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #333;text-align:center;font-size:11px;color:#555;">
+        <span>Open source (MIT) by Hans Chandler Vidaure</span><br>
+        <a href="https://github.com/hansvidaure24/Behavior-Tree-Editor" target="_blank" style="color:#53a8b6;text-decoration:none;">GitHub</a>
+        <span style="margin:0 6px;">·</span>
+        <a href="https://ko-fi.com/toothlex" target="_blank" style="color:#ff5e5b;text-decoration:none;">Support on Ko-fi</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search dialog -->
+  <div id="search-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:340px;">
+      <h3>Find Node</h3>
+      <div style="position:relative;">
+        <input type="text" id="search-input" placeholder="Search by name, type, or description..." spellcheck="false" style="width:100%;padding:7px 10px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:14px;outline:none;font-family:inherit;">
+        <span id="search-count" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:#53a8b6;pointer-events:none;opacity:0.7;"></span>
+      </div>
+      <div id="search-results" style="margin-top:10px;max-height:250px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Command palette -->
+  <div id="cmd-palette" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:380px;padding:12px;">
+      <input type="text" id="cmd-input" placeholder="Type a command..." spellcheck="false" style="width:100%;padding:8px 12px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:14px;outline:none;font-family:inherit;">
+      <div id="cmd-results" style="margin-top:8px;max-height:280px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- JSON Preview panel -->
+  <div id="json-panel" class="hidden">
+    <div id="json-panel-header">
+      <span>JSON Preview</span>
+      <button id="json-panel-close" title="Close">✕</button>
+    </div>
+    <pre id="json-content"></pre>
+  </div>
+
+  <!-- Tree Outline panel -->
+  <div id="outline-panel" class="hidden">
+    <div id="outline-header">
+      <span>Tree Outline</span>
+      <button id="outline-close" title="Close">✕</button>
+    </div>
+    <input type="text" id="outline-filter" placeholder="Filter nodes..." spellcheck="false">
+    <div id="outline-content"></div>
+  </div>
+
+  <!-- AI Generate dialog -->
+  <div id="ai-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:420px;">
+      <h3>Describe Behavior</h3>
+      <p id="ai-subtitle" style="font-size:12px;color:#666;margin-bottom:10px;">Describe the behavior in plain English. The more trees you save, the smarter this gets.</p>
+      <textarea id="ai-input" rows="3" spellcheck="false" placeholder="e.g. patrol an area, chase enemies, attack when close, flee when low health" style="width:100%;padding:8px 10px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:13px;outline:none;font-family:inherit;resize:vertical;"></textarea>
+      <div id="ai-hints" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+      <div class="dialog-buttons">
+        <button id="ai-generate">Generate</button>
+        <button id="ai-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warnings panel -->
+  <div id="warnings-panel" class="hidden">
+    <div id="warnings-header">
+      <span>Warnings</span>
+      <button id="warnings-close" title="Close">✕</button>
+    </div>
+    <div id="warnings-list"></div>
+  </div>
+
+  <!-- Find & Replace dialog -->
+  <div id="replace-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:380px;">
+      <h3>Find &amp; Replace</h3>
+      <label style="font-size:12px;color:#8888aa;">Find
+        <input type="text" id="replace-find" placeholder="Node name to find..." spellcheck="false" style="width:100%;padding:7px 10px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:14px;outline:none;font-family:inherit;margin-top:4px;">
+      </label>
+      <label style="font-size:12px;color:#8888aa;margin-top:10px;display:block;">Replace with
+        <input type="text" id="replace-with" placeholder="Replacement..." spellcheck="false" style="width:100%;padding:7px 10px;background:#1a1a2e;color:#e0e0e0;border:1px solid #0f3460;border-radius:4px;font-size:14px;outline:none;font-family:inherit;margin-top:4px;">
+      </label>
+      <div id="replace-preview" style="margin-top:10px;max-height:150px;overflow-y:auto;font-size:12px;color:#888;"></div>
+      <div class="dialog-buttons">
+        <button id="replace-all">Replace All</button>
+        <button id="replace-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blackboard Key Viewer panel -->
+  <div id="bb-viewer-panel" class="hidden">
+    <div id="bb-viewer-header">
+      <span>Blackboard Keys</span>
+      <button id="bb-viewer-close" title="Close">✕</button>
+    </div>
+    <div id="bb-viewer-content"></div>
+  </div>
+
+  <!-- Undo History panel -->
+  <div id="history-panel" class="hidden">
+    <div id="history-header">
+      <span>Undo History</span>
+      <button id="history-close" title="Close">✕</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- Version History dialog -->
+  <div id="version-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:380px;">
+      <h3>Version History</h3>
+      <p style="font-size:12px;color:#666;margin-bottom:10px;">Previous saves of this tree. Click to restore.</p>
+      <div id="version-list" style="max-height:300px;overflow-y:auto;"></div>
+      <div class="dialog-buttons">
+        <button id="version-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="stats-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:420px;">
+      <h3>Tree Statistics</h3>
+      <div id="stats-content" style="font-size:12px;line-height:1.8;color:#aaa;"></div>
+      <div id="stats-chart" style="margin-top:12px;"></div>
+      <div class="dialog-buttons">
+        <button id="stats-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic choice dialog (replaces prompt()) -->
+  <div id="choice-dialog" class="dialog hidden">
+    <div class="dialog-inner" style="min-width:340px;">
+      <h3 id="choice-title"></h3>
+      <div id="choice-options" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"></div>
+      <div class="dialog-buttons">
+        <button id="choice-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context menu -->
+  <div id="context-menu" class="ctx-menu hidden"></div>
+
+  <div id="drop-overlay"><span>Drop .bt.json or .replay.json</span></div>
+
+  <script src="fuse.min.js"></script>
+  <script type="module" src="app.js"></script>
+  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
+</body>
+</html>

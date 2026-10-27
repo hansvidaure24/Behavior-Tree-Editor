@@ -1,0 +1,136 @@
+{
+  "version": "1.0",
+  "title": "Guard Investigate",
+  "description": "Guard patrols, investigates suspicious sounds, alerts and engages threats",
+  "root": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["engage_seq", "investigate_seq", "patrol_seq"],
+      "parameters": {}
+    },
+    "engage_seq": {
+      "id": "engage_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Engage Threat",
+      "children": ["can_see_cond", "alert_act", "attack_par"],
+      "parameters": {}
+    },
+    "can_see_cond": {
+      "id": "can_see_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Can See Enemy",
+      "children": [],
+      "parameters": {"key": "enemy_visible", "op": "eq", "value": true}
+    },
+    "alert_act": {
+      "id": "alert_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Raise Alarm",
+      "children": [],
+      "parameters": {"alert_radius": 20.0}
+    },
+    "attack_par": {
+      "id": "attack_par",
+      "type": "parallel",
+      "category": "composite",
+      "name": "Attack While Facing",
+      "children": ["face_act", "attack_act"],
+      "parameters": {"policy": "fail_on_one"}
+    },
+    "face_act": {
+      "id": "face_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Face Enemy",
+      "children": [],
+      "parameters": {"turn_speed": 270}
+    },
+    "attack_act": {
+      "id": "attack_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Melee Attack",
+      "children": [],
+      "parameters": {"damage": 15, "range": 2.0}
+    },
+    "investigate_seq": {
+      "id": "investigate_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Investigate",
+      "children": ["heard_cond", "timeout_dec"],
+      "parameters": {}
+    },
+    "heard_cond": {
+      "id": "heard_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Heard Noise",
+      "children": [],
+      "parameters": {"key": "noise_detected", "op": "eq", "value": true}
+    },
+    "timeout_dec": {
+      "id": "timeout_dec",
+      "type": "timeout",
+      "category": "decorator",
+      "name": "Search Timer",
+      "children": ["search_seq"],
+      "parameters": {"seconds": 8}
+    },
+    "search_seq": {
+      "id": "search_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Search Area",
+      "children": ["move_noise_act", "look_act"],
+      "parameters": {}
+    },
+    "move_noise_act": {
+      "id": "move_noise_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Noise",
+      "children": [],
+      "parameters": {"speed": 3.5}
+    },
+    "look_act": {
+      "id": "look_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Look Around",
+      "children": [],
+      "parameters": {"duration": 3.0, "angle": 120}
+    },
+    "patrol_seq": {
+      "id": "patrol_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Patrol Route",
+      "children": ["walk_act", "wait_act"],
+      "parameters": {}
+    },
+    "walk_act": {
+      "id": "walk_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Walk To Waypoint",
+      "children": [],
+      "parameters": {"speed": 2.0}
+    },
+    "wait_act": {
+      "id": "wait_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Wait At Post",
+      "children": [],
+      "parameters": {"duration": 4.0}
+    }
+  }
+}

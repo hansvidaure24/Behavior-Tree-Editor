@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "title": "Shopkeeper",
+  "description": "Greet approaching customer, show wares, process transaction, say farewell",
+  "root": "d0000001",
+  "nodes": {
+    "d0000001": {
+      "id": "d0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["d0000002", "d000000a", "d000000f"],
+      "parameters": {}
+    },
+    "d0000002": {
+      "id": "d0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Handle Transaction",
+      "children": ["d0000003", "d0000004", "d0000005", "d0000006", "d0000007"],
+      "parameters": {}
+    },
+    "d0000003": {
+      "id": "d0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Customer Browsing",
+      "children": [],
+      "parameters": {"key": "customer_state", "op": "eq", "value": "browsing"}
+    },
+    "d0000004": {
+      "id": "d0000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Show Wares",
+      "children": [],
+      "parameters": {"dialogue": "take_a_look", "open_shop_ui": true}
+    },
+    "d0000005": {
+      "id": "d0000005",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Customer Made Purchase",
+      "children": [],
+      "parameters": {"key": "transaction_complete", "op": "eq", "value": true}
+    },
+    "d0000006": {
+      "id": "d0000006",
+      "type": "action",
+      "category": "leaf",
+      "name": "Accept Payment",
+      "children": [],
+      "parameters": {"animation": "hand_exchange", "sound": "coin_clink"}
+    },
+    "d0000007": {
+      "id": "d0000007",
+      "type": "action",
+      "category": "leaf",
+      "name": "Farewell Customer",
+      "children": [],
+      "parameters": {"dialogue": "come_again", "animation": "wave"}
+    },
+    "d000000a": {
+      "id": "d000000a",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Greet Customer",
+      "children": ["d000000b", "d000000c"],
+      "parameters": {}
+    },
+    "d000000b": {
+      "id": "d000000b",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Customer Nearby",
+      "children": [],
+      "parameters": {"key": "nearest_player_distance", "op": "lt", "value": 5.0}
+    },
+    "d000000c": {
+      "id": "d000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Greet",
+      "children": [],
+      "parameters": {"dialogue": "welcome_traveler", "animation": "greeting_bow"}
+    },
+    "d000000f": {
+      "id": "d000000f",
+      "type": "action",
+      "category": "leaf",
+      "name": "Idle Behind Counter",
+      "children": [],
+      "parameters": {"animation": "idle_polish_counter", "look_around": true}
+    }
+  }
+}

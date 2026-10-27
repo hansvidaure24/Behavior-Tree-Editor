@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "title": "Companion Follower",
+  "description": "Follow player, assist in combat, heal player when hurt",
+  "root": "b0000001",
+  "nodes": {
+    "b0000001": {
+      "id": "b0000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["b0000002", "b0000008", "b000000d"],
+      "parameters": {}
+    },
+    "b0000002": {
+      "id": "b0000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Heal Player",
+      "children": ["b0000003", "b0000004", "b0000005"],
+      "parameters": {}
+    },
+    "b0000003": {
+      "id": "b0000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Player Health Low",
+      "children": [],
+      "parameters": {"key": "player_health_pct", "op": "lt", "value": 0.4}
+    },
+    "b0000004": {
+      "id": "b0000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Player",
+      "children": [],
+      "parameters": {"speed": 5.5, "stop_distance": 2.0}
+    },
+    "b0000005": {
+      "id": "b0000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Cast Heal",
+      "children": [],
+      "parameters": {"heal_amount": 40, "cast_time": 1.2, "animation": "cast_heal"}
+    },
+    "b0000008": {
+      "id": "b0000008",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Combat Assist",
+      "children": ["b0000009", "b000000a", "b000000b"],
+      "parameters": {}
+    },
+    "b0000009": {
+      "id": "b0000009",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Enemy Nearby",
+      "children": [],
+      "parameters": {"key": "nearest_enemy_distance", "op": "lt", "value": 10.0}
+    },
+    "b000000a": {
+      "id": "b000000a",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Enemy",
+      "children": [],
+      "parameters": {"speed": 5.0, "stop_distance": 1.8}
+    },
+    "b000000b": {
+      "id": "b000000b",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack Enemy",
+      "children": [],
+      "parameters": {"damage": 15, "animation": "sword_swing"}
+    },
+    "b000000d": {
+      "id": "b000000d",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Follow Player",
+      "children": ["b000000e", "b000000f"],
+      "parameters": {}
+    },
+    "b000000e": {
+      "id": "b000000e",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Too Far From Player",
+      "children": [],
+      "parameters": {"key": "player_distance", "op": "gt", "value": 4.0}
+    },
+    "b000000f": {
+      "id": "b000000f",
+      "type": "action",
+      "category": "leaf",
+      "name": "Follow Player",
+      "children": [],
+      "parameters": {"speed": 4.5, "stop_distance": 2.5}
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "title": "Flying Patrol",
+  "description": "Fly patrol route at altitude, spot ground target, dive attack, return to altitude",
+  "root": "20000001",
+  "nodes": {
+    "20000001": {
+      "id": "20000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["20000002", "2000000a", "20000010"],
+      "parameters": {}
+    },
+    "20000002": {
+      "id": "20000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Dive Attack",
+      "children": ["20000003", "20000004", "20000005", "20000006", "20000007"],
+      "parameters": {}
+    },
+    "20000003": {
+      "id": "20000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Ground Target",
+      "children": [],
+      "parameters": {"key": "has_target", "op": "eq", "value": true}
+    },
+    "20000004": {
+      "id": "20000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Circle Target",
+      "children": [],
+      "parameters": {"circle_radius": 15.0, "altitude": 20.0, "duration": 2.0}
+    },
+    "20000005": {
+      "id": "20000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Dive",
+      "children": [],
+      "parameters": {"dive_speed": 18.0, "animation": "dive_attack"}
+    },
+    "20000006": {
+      "id": "20000006",
+      "type": "action",
+      "category": "leaf",
+      "name": "Slash With Talons",
+      "children": [],
+      "parameters": {"damage": 45, "knockback": 3.0, "animation": "talon_strike"}
+    },
+    "20000007": {
+      "id": "20000007",
+      "type": "action",
+      "category": "leaf",
+      "name": "Climb Back To Altitude",
+      "children": [],
+      "parameters": {"target_altitude": 25.0, "climb_speed": 10.0}
+    },
+    "2000000a": {
+      "id": "2000000a",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Spot Target",
+      "children": ["2000000b", "2000000c"],
+      "parameters": {}
+    },
+    "2000000b": {
+      "id": "2000000b",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Movement Below Detected",
+      "children": [],
+      "parameters": {"key": "ground_movement_detected", "op": "eq", "value": true}
+    },
+    "2000000c": {
+      "id": "2000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Lock On Target",
+      "children": [],
+      "parameters": {"detection_range": 40.0, "animation": "screech"}
+    },
+    "20000010": {
+      "id": "20000010",
+      "type": "action",
+      "category": "leaf",
+      "name": "Fly Patrol Route",
+      "children": [],
+      "parameters": {"altitude": 25.0, "speed": 8.0, "waypoint_set": "aerial_patrol_ring"}
+    }
+  }
+}

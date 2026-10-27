@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "title": "Berserker Rage",
+  "description": "Check rage meter, charge target, unleash frenzy attack combo, rest during exhaustion cooldown",
+  "root": "40000001",
+  "nodes": {
+    "40000001": {
+      "id": "40000001",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["40000002", "40000009", "4000000f"],
+      "parameters": {}
+    },
+    "40000002": {
+      "id": "40000002",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Frenzy Combo",
+      "children": ["40000003", "40000004", "40000005", "40000006", "40000007"],
+      "parameters": {}
+    },
+    "40000003": {
+      "id": "40000003",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Rage Meter Full",
+      "children": [],
+      "parameters": {"key": "rage_meter", "op": "gte", "value": 1.0}
+    },
+    "40000004": {
+      "id": "40000004",
+      "type": "action",
+      "category": "leaf",
+      "name": "Roar",
+      "children": [],
+      "parameters": {"fear_radius": 8.0, "duration": 1.0, "animation": "berserker_roar"}
+    },
+    "40000005": {
+      "id": "40000005",
+      "type": "action",
+      "category": "leaf",
+      "name": "Axe Spin Attack",
+      "children": [],
+      "parameters": {"damage": 60, "radius": 3.0, "hits": 3, "animation": "spin_attack"}
+    },
+    "40000006": {
+      "id": "40000006",
+      "type": "action",
+      "category": "leaf",
+      "name": "Overhead Slam",
+      "children": [],
+      "parameters": {"damage": 80, "stagger_chance": 0.7, "animation": "overhead_slam"}
+    },
+    "40000007": {
+      "id": "40000007",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Exhaustion Cooldown",
+      "children": ["40000008"],
+      "parameters": {"duration": 6.0}
+    },
+    "40000008": {
+      "id": "40000008",
+      "type": "action",
+      "category": "leaf",
+      "name": "Heave And Recover",
+      "children": [],
+      "parameters": {"animation": "exhausted_panting", "rage_drain": 1.0}
+    },
+    "40000009": {
+      "id": "40000009",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Charge Target",
+      "children": ["4000000a", "4000000b", "4000000c"],
+      "parameters": {}
+    },
+    "4000000a": {
+      "id": "4000000a",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Rage Meter High",
+      "children": [],
+      "parameters": {"key": "rage_meter", "op": "gte", "value": 0.5}
+    },
+    "4000000b": {
+      "id": "4000000b",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Target",
+      "children": [],
+      "parameters": {"key": "has_target", "op": "eq", "value": true}
+    },
+    "4000000c": {
+      "id": "4000000c",
+      "type": "action",
+      "category": "leaf",
+      "name": "Charge",
+      "children": [],
+      "parameters": {"speed": 9.0, "knockback_on_hit": 5.0, "animation": "berserker_charge"}
+    },
+    "4000000f": {
+      "id": "4000000f",
+      "type": "action",
+      "category": "leaf",
+      "name": "Build Rage",
+      "children": [],
+      "parameters": {"speed": 4.5, "animation": "aggressive_advance", "rage_gain_per_sec": 0.15}
+    }
+  }
+}

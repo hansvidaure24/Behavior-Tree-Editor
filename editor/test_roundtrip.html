@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html><head><title>Serialization Round-Trip Tests</title></head>
+<body>
+<pre id="out"></pre>
+<script type="module">
+import { Serialization } from './serialization.js';
+const out = document.getElementById("out");
+let pass = 0, fail = 0;
+
+function assert(cond, msg) {
+  if (cond) { pass++; out.textContent += "  PASS " + msg + "\n"; }
+  else { fail++; out.textContent += "  FAIL " + msg + "\n"; }
+}
+
+function assertEq(a, b, msg) {
+  assert(JSON.stringify(a) === JSON.stringify(b), msg + " (got " + JSON.stringify(a) + ")");
+}
+
+// Build a tree with every node type
+const nodes = [
+  { id: "root1", type: "selector", category: "composite", name: "Root Selector", children: ["seq1", "inv1"], parameters: {}, x: 0, y: 0 },
+  { id: "seq1", type: "sequence", category: "composite", name: "Attack Sequence", children: ["cond1", "cool1"], parameters: {}, x: 100, y: 100 },
+  { id: "par1", type: "parallel", category: "composite", name: "Parallel Watch", children: ["act2", "cond1"], parameters: { policy: "require_all" }, x: 200, y: 200 },
+  { id: "act1", type: "action", category: "leaf", name: "Attack Target", children: [], parameters: { damage: 10, speed: 2.5 }, x: 300, y: 300 },
+  { id: "act2", type: "action", category: "leaf", name: "Move To", children: [], parameters: { speed: 5.0 }, x: 400, y: 400 },
+  { id: "cond1", type: "condition", category: "leaf", name: "Has Target", children: [], parameters: { key: "has_target" }, x: 500, y: 500 },
+  { id: "inv1", type: "invert", category: "decorator", name: "Not Dead", children: ["cond2"], parameters: {}, x: 600, y: 600 },
+  { id: "cond2", type: "condition", category: "leaf", name: "Is Dead", children: [], parameters: { key: "is_dead" }, x: 700, y: 700 },
+  { id: "rep1", type: "repeat", category: "decorator", name: "Repeat 3x", children: ["act1"], parameters: { count: 3 }, x: 800, y: 800 },
+  { id: "cool1", type: "cooldown", category: "decorator", name: "Attack CD", children: ["act1"], parameters: { duration: 1.5 }, x: 900, y: 900 },
+  { id: "tout1", type: "timeout", category: "decorator", name: "Search Timeout", children: ["act2"], parameters: { seconds: 5 }, x: 1000, y: 1000 },
+  { id: "guard1", type: "guard", category: "decorator", name: "Health Guard", children: ["seq1"], parameters: { condition: "health_above_50" }, x: 1100, y: 1100 },
+];
+
+const editorState = {
+  title: "Test Tree",
+  description: "A tree with every node type",
+  root: "root1",
+  nodes: nodes.map(n => ({ ...n })),
+};
+
+// --- Test 1: round-trip preserves all fields ---
+out.textContent += "Round-trip tests:\n";
+
+const { tree, layout } = Serialization.toJSON(editorState);
+const restored = Serialization.fromJSON(tree, layout);
+
+assertEq(restored.title, "Test Tree", "title preserved");
+assertEq(restored.description, "A tree with every node type", "description preserved");
+assertEq(restored.root, "root1", "root preserved");
+assertEq(restored.nodes.length, nodes.length, "node count preserved");
+
+for (const orig of nodes) {
+  const found = restored.nodes.find(n => n.id === orig.id);
+  assert(found, orig.id + " exists after round-trip");
+  if (!found) continue;
+  assertEq(found.type, orig.type, orig.id + " type preserved");
+  assertEq(found.category, orig.category, orig.id + " category preserved");
+  assertEq(found.name, orig.name, orig.id + " name preserved");
+  assertEq(found.children, orig.children, orig.id + " children preserved");
+  assertEq(found.parameters, orig.parameters, orig.id + " parameters preserved");
+  assertEq(found.x, orig.x, orig.id + " x preserved");
+  assertEq(found.y, orig.y, orig.id + " y preserved");
+}
+
+// --- Test 2: logic/layout separation ---
+out.textContent += "\nSeparation tests:\n";
+
+assert(!tree.nodes["root1"].x && tree.nodes["root1"].x !== 0 || !("x" in tree.nodes["root1"]), "x not in tree JSON");
+assert(!tree.nodes["root1"].y && tree.nodes["root1"].y !== 0 || !("y" in tree.nodes["root1"]), "y not in tree JSON");
+assert(layout.nodes["root1"].x === 0, "x in layout JSON");
+assert(layout.nodes["root1"].y === 0, "y in layout JSON");
+
+// --- Test 3: required fields present in tree JSON ---
+out.textContent += "\nSchema contract tests:\n";
+
+assert("version" in tree, "tree has version");
+assert("title" in tree, "tree has title");
+assert("root" in tree, "tree has root");
+assert("nodes" in tree, "tree has nodes");
+assert(typeof tree.nodes === "object" && !Array.isArray(tree.nodes), "nodes is object not array");
+
+for (const [id, n] of Object.entries(tree.nodes)) {
+  assert("id" in n, id + " has id");
+  assert("type" in n, id + " has type");
+  assert("category" in n, id + " has category");
+  assert("name" in n, id + " has name");
+  assert("children" in n && Array.isArray(n.children), id + " has children array");
+  assert("parameters" in n && typeof n.parameters === "object", id + " has parameters object");
+}
+
+// --- Test 4: optional fields (comment, color, disabled, description) ---
+out.textContent += "\nOptional field tests:\n";
+
+const withExtras = {
+  title: "Extras", description: "", root: "n1",
+  nodes: [
+    { id: "n1", type: "action", category: "leaf", name: "Test", children: [], parameters: {},
+      x: 0, y: 0, comment: "important node", color: "#ff0000", disabled: true, description: "does stuff" },
+  ],
+};
+const { tree: t2 } = Serialization.toJSON(withExtras);
+const r2 = Serialization.fromJSON(t2, { version: "1.0", nodes: { n1: { x: 0, y: 0 } } });
+const n1out = t2.nodes["n1"];
+assertEq(n1out.comment, "important node", "comment in JSON");
+assertEq(n1out.color, "#ff0000", "color in JSON");
+assertEq(n1out.disabled, true, "disabled in JSON");
+assertEq(n1out.description, "does stuff", "description in JSON");
+assertEq(r2.nodes[0].comment, "important node", "comment restored");
+assertEq(r2.nodes[0].color, "#ff0000", "color restored");
+assertEq(r2.nodes[0].disabled, true, "disabled restored");
+assertEq(r2.nodes[0].description, "does stuff", "description restored");
+
+// --- Test 5: empty tree ---
+out.textContent += "\nEdge case tests:\n";
+
+const empty = { title: "", description: "", root: "", nodes: [] };
+const { tree: t3, layout: l3 } = Serialization.toJSON(empty);
+const r3 = Serialization.fromJSON(t3, l3);
+assertEq(r3.nodes.length, 0, "empty tree round-trips");
+
+// --- Test 6: nodes without optional fields ---
+const minimal = {
+  title: "Min", description: "", root: "m1",
+  nodes: [{ id: "m1", type: "action", category: "leaf", name: "Act", children: [], parameters: {}, x: 10, y: 20 }],
+};
+const { tree: t4 } = Serialization.toJSON(minimal);
+assert(!("comment" in t4.nodes["m1"]), "no comment field when empty");
+assert(!("color" in t4.nodes["m1"]), "no color field when empty");
+assert(!("disabled" in t4.nodes["m1"]), "no disabled field when false");
+
+// --- Summary ---
+out.textContent += `\n${pass + fail} tests: ${pass} passed, ${fail} failed\n`;
+document.title = fail > 0 ? `FAIL (${fail})` : `PASS (${pass})`;
+</script>
+</body></html>

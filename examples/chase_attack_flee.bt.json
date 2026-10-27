@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "title": "Chase Attack Flee",
+  "description": "Enemy chases player, attacks in range, flees when low health",
+  "root": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "selector",
+      "category": "composite",
+      "name": "Root",
+      "children": ["flee_seq", "attack_seq", "chase_seq", "idle_act"],
+      "parameters": {}
+    },
+    "flee_seq": {
+      "id": "flee_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Flee",
+      "children": ["low_hp_cond", "flee_act"],
+      "parameters": {}
+    },
+    "low_hp_cond": {
+      "id": "low_hp_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Health Below 20%",
+      "children": [],
+      "parameters": {"key": "health_pct", "op": "lt", "value": 0.2}
+    },
+    "flee_act": {
+      "id": "flee_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Flee From Target",
+      "children": [],
+      "parameters": {"speed": 7.0, "distance": 15.0}
+    },
+    "attack_seq": {
+      "id": "attack_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Attack",
+      "children": ["in_range_cond", "cooldown_dec", "face_act"],
+      "parameters": {}
+    },
+    "in_range_cond": {
+      "id": "in_range_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is In Melee Range",
+      "children": [],
+      "parameters": {"key": "target_distance", "op": "lt", "value": 2.5}
+    },
+    "cooldown_dec": {
+      "id": "cooldown_dec",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Attack Cooldown",
+      "children": ["attack_act"],
+      "parameters": {"duration": 1.5}
+    },
+    "attack_act": {
+      "id": "attack_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Swing Weapon",
+      "children": [],
+      "parameters": {"animation": "attack_heavy", "damage": 25}
+    },
+    "face_act": {
+      "id": "face_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Face Target",
+      "children": [],
+      "parameters": {"turn_speed": 360}
+    },
+    "chase_seq": {
+      "id": "chase_seq",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Chase",
+      "children": ["has_target_cond", "move_act"],
+      "parameters": {}
+    },
+    "has_target_cond": {
+      "id": "has_target_cond",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Target",
+      "children": [],
+      "parameters": {"key": "has_target", "op": "eq", "value": true}
+    },
+    "move_act": {
+      "id": "move_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"speed": 5.0}
+    },
+    "idle_act": {
+      "id": "idle_act",
+      "type": "action",
+      "category": "leaf",
+      "name": "Idle",
+      "children": [],
+      "parameters": {"animation": "idle_breathe"}
+    }
+  }
+}

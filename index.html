@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Behavior Tree Editor — Visual AI Authoring Tool</title>
+  <meta name="description" content="Web-based visual behavior tree editor for game AI. Author, debug, and export behavior trees for Unity, Unreal, and Godot.">
+  <link rel="icon" href="editor/favicon.ico" type="image/x-icon">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1b2a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 60px 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 30%, #16213e 0%, #0d1b2a 70%);
+      z-index: -1;
+    }
+
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(#ffffff06 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff06 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: -1;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      position: relative;
+    }
+
+    .logo-icon .dot {
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .logo-icon .dot.root { width: 16px; height: 16px; background: #95d5b2; top: 0; left: 20px; }
+    .logo-icon .dot.left { width: 12px; height: 12px; background: #e09f3e; top: 28px; left: 4px; }
+    .logo-icon .dot.right { width: 12px; height: 12px; background: #c77dff; top: 28px; left: 40px; }
+    .logo-icon .dot.leaf { width: 10px; height: 10px; background: #53a8b6; top: 46px; left: 23px; }
+
+    .logo-icon .line {
+      position: absolute;
+      background: #ffffff15;
+      width: 2px;
+      transform-origin: top center;
+    }
+    .logo-icon .line.l1 { height: 20px; top: 14px; left: 22px; transform: rotate(-25deg); }
+    .logo-icon .line.l2 { height: 20px; top: 14px; left: 32px; transform: rotate(25deg); }
+    .logo-icon .line.l3 { height: 14px; top: 38px; left: 28px; }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    h1 span { color: #53a8b6; }
+
+    .subtitle {
+      font-size: clamp(14px, 2.5vw, 18px);
+      color: #8888aa;
+      margin-top: 12px;
+      max-width: 520px;
+      line-height: 1.6;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 36px;
+      padding: 14px 36px;
+      background: #53a8b6;
+      color: #0d1b2a;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .cta:hover { background: #7dd3e0; transform: translateY(-1px); }
+    .cta:active { transform: translateY(0); }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin-top: 64px;
+      width: 100%;
+    }
+
+    .feature {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 10px;
+      padding: 22px 20px;
+      text-align: left;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .feature:hover { border-color: #53a8b644; transform: translateY(-2px); }
+
+    .feature-icon { font-size: 24px; margin-bottom: 10px; }
+
+    .feature h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #e0e0e0;
+    }
+
+    .feature p {
+      font-size: 13px;
+      color: #8888aa;
+      line-height: 1.5;
+    }
+
+    .engines {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      color: #555;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .engine-badge {
+      padding: 6px 14px;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      color: #8888aa;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 12px;
+      color: #555;
+      border-top: 1px solid #0f3460;
+    }
+    footer a { color: #53a8b6; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      color: #53a8b6;
+      font-weight: 700;
+    }
+    .stat span {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Animated tree demo */
+    .tree-demo {
+      position: relative;
+      width: 360px;
+      height: 200px;
+      margin-top: 48px;
+      margin-bottom: -20px;
+    }
+    .tree-demo .tn {
+      position: absolute;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 14px;
+      white-space: nowrap;
+      opacity: 0;
+      animation: nodeIn 0.4s ease-out forwards;
+      box-shadow: 0 2px 8px #00000040;
+    }
+    .tree-demo .conn {
+      position: absolute;
+      width: 2px;
+      background: #53a8b630;
+      transform-origin: top center;
+      opacity: 0;
+      animation: connIn 0.3s ease-out forwards;
+    }
+    @keyframes nodeIn { from { opacity:0; transform:scale(0.7) translateY(-8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    @keyframes connIn { from { opacity:0; } to { opacity:1; } }
+
+    .tree-demo .tn.composite { background: #1a3a2a; border: 1px solid #95d5b2; color: #95d5b2; }
+    .tree-demo .tn.decorator { background: #2a1a3a; border: 1px solid #c77dff; color: #c77dff; }
+    .tree-demo .tn.leaf { background: #1a2a3a; border: 1px solid #53a8b6; color: #53a8b6; }
+
+    .tree-demo .tn.active { box-shadow: 0 0 12px #95d5b260; }
+    .tree-demo .tn.status-success { box-shadow: 0 0 14px #22c55e50; border-color: #22c55e !important; }
+    .tree-demo .tn.status-failure { box-shadow: 0 0 14px #ef444450; border-color: #ef4444 !important; }
+    .tree-demo .tn.status-running { box-shadow: 0 0 14px #f59e0b50; border-color: #f59e0b !important; }
+    .tree-demo .pulse {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #95d5b2;
+      opacity: 0;
+      animation: dotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes dotPulse { 0%,100% { opacity:0; } 30% { opacity:1; } 70% { opacity:1; } }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="grid-bg"></div>
+
+    <div class="logo">
+      <div class="logo-icon">
+        <div class="line l1"></div>
+        <div class="line l2"></div>
+        <div class="line l3"></div>
+        <div class="dot root"></div>
+        <div class="dot left"></div>
+        <div class="dot right"></div>
+        <div class="dot leaf"></div>
+      </div>
+      <h1>Behavior Tree <span>Editor</span></h1>
+    </div>
+
+    <p class="subtitle">
+      Visual node-graph editor for authoring, debugging, and exporting game AI behavior trees.
+      Runs in the browser. No engine install required.
+    </p>
+
+    <a href="editor/" class="cta">Open Editor</a>
+
+    <div class="tree-demo" aria-hidden="true">
+      <!-- Connections -->
+      <div class="conn" style="left:178px;top:30px;height:36px;transform:rotate(-30deg);animation-delay:0.2s;"></div>
+      <div class="conn" style="left:178px;top:30px;height:36px;transform:rotate(30deg);animation-delay:0.3s;"></div>
+      <div class="conn" style="left:82px;top:96px;height:32px;transform:rotate(-20deg);animation-delay:0.5s;"></div>
+      <div class="conn" style="left:82px;top:96px;height:32px;transform:rotate(20deg);animation-delay:0.6s;"></div>
+      <!-- Nodes -->
+      <div class="tn composite active" style="left:140px;top:4px;animation-delay:0.1s;">→ Sequence</div>
+      <div class="tn composite" style="left:34px;top:64px;animation-delay:0.3s;">? Selector</div>
+      <div class="tn decorator" style="left:230px;top:64px;animation-delay:0.4s;">↻ Repeat</div>
+      <div class="tn leaf" style="left:0;top:128px;animation-delay:0.6s;">▶ Patrol</div>
+      <div class="tn leaf" style="left:110px;top:128px;animation-delay:0.7s;">✔ EnemyNear</div>
+      <div class="tn leaf" style="left:240px;top:128px;animation-delay:0.8s;">▶ Attack</div>
+      <!-- Execution pulse dots -->
+      <div class="pulse" style="left:174px;top:34px;animation-delay:0s;"></div>
+      <div class="pulse" style="left:76px;top:96px;animation-delay:0.8s;"></div>
+      <div class="pulse" style="left:36px;top:158px;animation-delay:1.6s;"></div>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <h3>Visual Authoring</h3>
+        <p>Drag-and-drop node graph with auto-layout, snap guides, and inline rename. Build complex AI in minutes.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⏪</div>
+        <h3>Replay Debugger</h3>
+        <p>Load recorded tick data, scrub through time, see exactly why the AI made each decision.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📄</div>
+        <h3>Git-Friendly JSON</h3>
+        <p>Separate logic and layout files. Clean line-level diffs. No coordinates polluting your behavior logic.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✨</div>
+        <h3>AI-Assisted</h3>
+        <p>Describe behavior in plain English — patrol, chase, attack, flee — and get a starting tree instantly.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>Web-Native + Offline</h3>
+        <p>Runs entirely in the browser with PWA offline support. No install, no plugins, no engine license.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔌</div>
+        <h3>Cross-Engine Export</h3>
+        <p>Export JSON consumed by thin runtime adapters for Unity (C#), Unreal (C++), and Godot (GDScript).</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⌨️</div>
+        <h3>Keyboard-First</h3>
+        <p>50+ shortcuts, command palette (Ctrl+P), quick-add keys, inline rename — keep your hands on the keyboard.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📋</div>
+        <h3>Templates &amp; Patterns</h3>
+        <p>Pre-wired node patterns: check-then-act, try/fallback, cooldown, guarded sequences. One click to insert.</p>
+      </div>
+    </div>
+
+    <div class="engines">
+      <span>Export to</span>
+      <span class="engine-badge">Unity</span>
+      <span class="engine-badge">Unreal</span>
+      <span class="engine-badge">Godot</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><strong>50+</strong><span>Keyboard shortcuts</span></div>
+      <div class="stat"><strong>10</strong><span>Node types</span></div>
+      <div class="stat"><strong>0</strong><span>Build steps</span></div>
+      <div class="stat"><strong>PWA</strong><span>Works offline</span></div>
+    </div>
+  </section>
+
+  <footer>
+    Open source (MIT) by Hans Chandler Vidaure · <a href="editor/">Open Editor</a> · <a href="https://github.com/hansvidaure24/Behavior-Tree-Editor">GitHub</a> · <a href="https://ko-fi.com/toothlex" style="color:#ff5e5b;">Support on Ko-fi</a>
+  </footer>
+  <script>
+    // Simulate tree execution on the landing page demo
+    const nodes = document.querySelectorAll('.tree-demo .tn');
+    if (nodes.length >= 6) {
+      const scenarios = [
+        // [Sequence, Selector, Repeat, Patrol, EnemyNear, Attack]
+        ['running','running','','running','',''],
+        ['running','running','','success','',''],
+        ['running','success','','','failure',''],
+        ['success','','running','','','running'],
+        ['success','','success','','','success'],
+        ['running','running','','running','',''],
+        ['running','failure','','failure','',''],
+        ['failure','failure','failure','','failure','failure'],
+      ];
+      let step = 0;
+      function animateTree() {
+        const s = scenarios[step % scenarios.length];
+        nodes.forEach((n, i) => {
+          n.classList.remove('status-success','status-failure','status-running','active');
+          if (s[i]) n.classList.add('status-' + s[i]);
+        });
+        step++;
+      }
+      setTimeout(() => { animateTree(); setInterval(animateTree, 1200); }, 2000);
+    }
+  </script>
+</body>
+</html>
