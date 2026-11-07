@@ -10,6 +10,9 @@ decisions the game's original runtime makes.
 | ![The Gravewarden's tree in the editor](docs/images/editor-gravewarden.png) | ![The Gravewarden fighting the squad in Hold Steadfast](docs/images/holdsteadfast-gravewarden-fight.png) | ![The in-game recording scrubbed to the Halberd Swing](docs/images/editor-replay-ingame.png) |
 | Branches named and laid out in the editor, saved straight into the Unity project's `Assets/`. | The enemy runs the `.bt.json`. Save again in Play mode and it switches trees within a second. | The game records every tick; drop the `.replay.json` on the editor to see why it swung. |
 
+▶ **[Watch the 78-second demo](docs/video/bt-editor-holdsteadfast-demo.mp4)**. It shows the tree in the editor, its
+in-game replay, the Gravewarden fighting in Hold Steadfast, and a live edit that Unity reloads mid-fight.
+
 A visual node-graph editor for game AI: author behavior trees, debug them with a replay timeline, and run them in
 Unity through a small C# runtime. Desktop app (Tauri) for Windows, or the same editor in the browser
 ([live demo](https://hansvidaure24.github.io/Behavior-Tree-Editor/editor/)).
