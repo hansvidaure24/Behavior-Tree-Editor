@@ -1,5 +1,5 @@
 // ponytail: bump CACHE_VERSION on deploy; automate with `sed -i` in deploy script if needed
-const CACHE_VERSION = 96;
+const CACHE_VERSION = 97;
 const CACHE = `bt-editor-v${CACHE_VERSION}`;
 const ASSETS = [
   "./",

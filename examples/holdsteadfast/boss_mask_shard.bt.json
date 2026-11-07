@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "title": "Mask Shard",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n4"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3"],
+      "parameters": {}
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 1.4}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Shard Touch: 5 HP/s on contact"
+    },
+    "n4": {
+      "id": "n4",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 0.6},
+      "comment": "Follow its player"
+    }
+  }
+}

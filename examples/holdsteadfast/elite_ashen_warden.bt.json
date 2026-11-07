@@ -1,0 +1,158 @@
+{
+  "version": "1.0",
+  "title": "Ashen Warden",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n5", "n9", "n14", "n17"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n2"],
+      "parameters": {"min": 30, "max": 30},
+      "comment": "Placeholder: rally cooldown is not in Enemy-Design"
+    },
+    "n2": {
+      "id": "n2",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n3", "n4"],
+      "parameters": {}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Health Below",
+      "children": [],
+      "parameters": {"fraction": 0.5}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Rally Cry"
+    },
+    "n5": {
+      "id": "n5",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n6", "n7", "n8"],
+      "parameters": {}
+    },
+    "n6": {
+      "id": "n6",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 3}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n8": {
+      "id": "n8",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 1},
+      "comment": "Pole Sweep"
+    },
+    "n9": {
+      "id": "n9",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n10", "n11", "n12", "n13"],
+      "parameters": {}
+    },
+    "n10": {
+      "id": "n10",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Line Of Sight",
+      "children": [],
+      "parameters": {}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 10}
+    },
+    "n12": {
+      "id": "n12",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n13": {
+      "id": "n13",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 2},
+      "comment": "Banner Hurl"
+    },
+    "n14": {
+      "id": "n14",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n15", "n16"],
+      "parameters": {}
+    },
+    "n15": {
+      "id": "n15",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBehindAllies"}
+    },
+    "n16": {
+      "id": "n16",
+      "type": "action",
+      "category": "leaf",
+      "name": "Circle Target",
+      "children": [],
+      "parameters": {"radius": 6, "duration": 2},
+      "comment": "Circle the perimeter"
+    },
+    "n17": {
+      "id": "n17",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Tactical Point",
+      "children": [],
+      "parameters": {"point": "BehindAllies"},
+      "comment": "Reposition behind the mob line"
+    }
+  }
+}

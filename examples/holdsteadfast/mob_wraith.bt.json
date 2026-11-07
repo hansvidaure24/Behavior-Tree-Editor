@@ -1,0 +1,124 @@
+{
+  "version": "1.0",
+  "title": "Wraith",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n6", "n10", "n13"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3", "n4", "n5"],
+      "parameters": {}
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player Using Ability",
+      "children": [],
+      "parameters": {}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 4}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n5": {
+      "id": "n5",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Disruption Shriek"
+    },
+    "n6": {
+      "id": "n6",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n7", "n8", "n9"],
+      "parameters": {}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 3}
+    },
+    "n8": {
+      "id": "n8",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n9": {
+      "id": "n9",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 1},
+      "comment": "Phase Strike"
+    },
+    "n10": {
+      "id": "n10",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n11", "n12"],
+      "parameters": {}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 15}
+    },
+    "n12": {
+      "id": "n12",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 2.5},
+      "comment": "Ghosts through mobs (agent movement mode)"
+    },
+    "n13": {
+      "id": "n13",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 2.5},
+      "comment": "The agent targets ability-using players first"
+    }
+  }
+}

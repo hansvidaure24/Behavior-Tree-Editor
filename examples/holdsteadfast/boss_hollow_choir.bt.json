@@ -1,0 +1,233 @@
+{
+  "version": "1.0",
+  "title": "Hollow Choir",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n4", "n8", "n12", "n16", "n20", "n22", "n26"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3"],
+      "parameters": {},
+      "comment": "Stagger: silenced for the window"
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossVulnerable"}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "action",
+      "category": "leaf",
+      "name": "Hold Position",
+      "children": [],
+      "parameters": {"seconds": 0.5}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Convergence every 30s",
+      "children": ["n5"],
+      "parameters": {"min": 30, "max": 30}
+    },
+    "n5": {
+      "id": "n5",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n6", "n7"],
+      "parameters": {}
+    },
+    "n6": {
+      "id": "n6",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase3"}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 5},
+      "comment": "Convergence"
+    },
+    "n8": {
+      "id": "n8",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Choir Split every 45s",
+      "children": ["n9"],
+      "parameters": {"min": 45, "max": 45}
+    },
+    "n9": {
+      "id": "n9",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n10", "n11"],
+      "parameters": {}
+    },
+    "n10": {
+      "id": "n10",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase2"}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 4},
+      "comment": "Choir Split"
+    },
+    "n12": {
+      "id": "n12",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "A mask every 25s",
+      "children": ["n13"],
+      "parameters": {"min": 25, "max": 25}
+    },
+    "n13": {
+      "id": "n13",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n14", "n15"],
+      "parameters": {}
+    },
+    "n14": {
+      "id": "n14",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase2"}
+    },
+    "n15": {
+      "id": "n15",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 3},
+      "comment": "Mask Shards"
+    },
+    "n16": {
+      "id": "n16",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n17"],
+      "parameters": {"min": 30, "max": 30},
+      "comment": "Chanters every 30s (Chanter Surge in phase 3)"
+    },
+    "n17": {
+      "id": "n17",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n18", "n19"],
+      "parameters": {}
+    },
+    "n18": {
+      "id": "n18",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "CanSummonMinions"}
+    },
+    "n19": {
+      "id": "n19",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 2},
+      "comment": "Summon Chanters"
+    },
+    "n20": {
+      "id": "n20",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Hymn Pulse every 20s",
+      "children": ["n21"],
+      "parameters": {"min": 20, "max": 20}
+    },
+    "n21": {
+      "id": "n21",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 1},
+      "comment": "Hymn Pulse"
+    },
+    "n22": {
+      "id": "n22",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Discordant Note every 8s",
+      "children": ["n23"],
+      "parameters": {"min": 8, "max": 8}
+    },
+    "n23": {
+      "id": "n23",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n24", "n25"],
+      "parameters": {}
+    },
+    "n24": {
+      "id": "n24",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Line Of Sight",
+      "children": [],
+      "parameters": {}
+    },
+    "n25": {
+      "id": "n25",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Discordant Note"
+    },
+    "n26": {
+      "id": "n26",
+      "type": "action",
+      "category": "leaf",
+      "name": "Hold Position",
+      "children": [],
+      "parameters": {"seconds": 0.5},
+      "comment": "It does not chase"
+    }
+  }
+}

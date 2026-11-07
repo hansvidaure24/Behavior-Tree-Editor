@@ -1,0 +1,332 @@
+{
+  "version": "1.0",
+  "title": "Pale Warden",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n9", "n14", "n19", "n23", "n28", "n34", "n38"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3"],
+      "parameters": {},
+      "comment": "Vulnerable window: no special attacks (Encounter-Design §2.6), only the slam"
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossVulnerable"}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n4", "n8"],
+      "parameters": {}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Placeholder: slam cooldown",
+      "children": ["n5"],
+      "parameters": {"min": 4, "max": 4}
+    },
+    "n5": {
+      "id": "n5",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n6", "n7"],
+      "parameters": {}
+    },
+    "n6": {
+      "id": "n6",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 4.5}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Heavy Slam"
+    },
+    "n8": {
+      "id": "n8",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 3}
+    },
+    "n9": {
+      "id": "n9",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n10"],
+      "parameters": {"min": 25, "max": 25},
+      "comment": "Corruption Surge: 25s cooldown"
+    },
+    "n10": {
+      "id": "n10",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n11", "n12", "n13"],
+      "parameters": {}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase3"}
+    },
+    "n12": {
+      "id": "n12",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 8}
+    },
+    "n13": {
+      "id": "n13",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 4},
+      "comment": "Corruption Surge"
+    },
+    "n14": {
+      "id": "n14",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Warden's Call every 40s",
+      "children": ["n15"],
+      "parameters": {"min": 40, "max": 40}
+    },
+    "n15": {
+      "id": "n15",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n16", "n17", "n18"],
+      "parameters": {}
+    },
+    "n16": {
+      "id": "n16",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase2"}
+    },
+    "n17": {
+      "id": "n17",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "CanSummonMinions"}
+    },
+    "n18": {
+      "id": "n18",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 3},
+      "comment": "Warden's Call"
+    },
+    "n19": {
+      "id": "n19",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n20"],
+      "parameters": {"min": 18, "max": 18},
+      "comment": "Shield Bash re-charges every 18s"
+    },
+    "n20": {
+      "id": "n20",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n21", "n22"],
+      "parameters": {}
+    },
+    "n21": {
+      "id": "n21",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 12, "min_range": 4}
+    },
+    "n22": {
+      "id": "n22",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 1},
+      "comment": "Shield Bash (two in a row from phase 2)"
+    },
+    "n23": {
+      "id": "n23",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n24"],
+      "parameters": {"min": 2.5, "max": 2.5},
+      "comment": "Placeholder: Relentless Mode's shorter slam cooldown"
+    },
+    "n24": {
+      "id": "n24",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n25", "n26", "n27"],
+      "parameters": {}
+    },
+    "n25": {
+      "id": "n25",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase3"}
+    },
+    "n26": {
+      "id": "n26",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 4.5}
+    },
+    "n27": {
+      "id": "n27",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Heavy Slam"
+    },
+    "n28": {
+      "id": "n28",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Placeholder: slam cooldown",
+      "children": ["n29"],
+      "parameters": {"min": 4, "max": 4}
+    },
+    "n29": {
+      "id": "n29",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n30", "n32", "n33"],
+      "parameters": {}
+    },
+    "n30": {
+      "id": "n30",
+      "type": "invert",
+      "category": "decorator",
+      "name": "Inverter",
+      "children": ["n31"],
+      "parameters": {}
+    },
+    "n31": {
+      "id": "n31",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsBossPhase3"}
+    },
+    "n32": {
+      "id": "n32",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 4.5}
+    },
+    "n33": {
+      "id": "n33",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Heavy Slam"
+    },
+    "n34": {
+      "id": "n34",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Placeholder: toss cooldown",
+      "children": ["n35"],
+      "parameters": {"min": 8, "max": 10}
+    },
+    "n35": {
+      "id": "n35",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n36", "n37"],
+      "parameters": {}
+    },
+    "n36": {
+      "id": "n36",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "HasDistantPlayer"}
+    },
+    "n37": {
+      "id": "n37",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 2},
+      "comment": "Corruption Toss at the furthest player"
+    },
+    "n38": {
+      "id": "n38",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 3},
+      "comment": "Patrol the platform toward the nearest player"
+    }
+  }
+}
