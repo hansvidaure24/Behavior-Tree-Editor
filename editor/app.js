@@ -65,6 +65,8 @@ export function setDirty(d) {
   document.title = (dirty ? "* " : "") + title + countStr + " — BT Editor";
   const activeTab = tabs.find(t => t.id === activeTabId);
   if (activeTab) { activeTab.title = title; activeTab.dirty = dirty; renderTabs(); }
+  // Every load path (examples, library, files, drag-and-drop) ends here: drop the empty-canvas hints once there's a tree.
+  document.getElementById("empty-examples").classList.toggle("hidden", state.nodes.length > 0);
   // Stats tooltip
   if (state.nodes.length > 0) {
     let conn = 0;
