@@ -257,7 +257,7 @@ export function initToolbar() {
         const gc = dragGhost.getContext("2d");
         const colors = NodeTypes.colors(cat);
         gc.clearRect(0, 0, 120, 40);
-        gc.fillStyle = colors.bg;
+        gc.fillStyle = colors.fill;
         gc.strokeStyle = colors.stroke;
         gc.lineWidth = 2;
         gc.beginPath(); gc.roundRect(2, 2, 116, 36, 6); gc.fill(); gc.stroke();

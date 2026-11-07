@@ -267,7 +267,10 @@ async function showVersionHistory() {
         try {
           const data = await Storage.loadVersion(name, v.timestamp);
           if (!data) { toast("Version not found"); return; }
-          Serialization.fromJSON(state, data.tree, data.layout);
+          const s = Serialization.fromJSON(data.tree, data.layout);
+          state.description = s.description;
+          state.root = s.root;
+          state.nodes = s.nodes;
           state.title = data.tree.title || state.title;
           document.getElementById("tree-title").textContent = state.title;
           onChanged();
