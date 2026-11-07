@@ -1,0 +1,25 @@
+[package]
+name = "bt-editor"
+version = "0.2.0"
+description = "Visual behavior tree editor for game AI"
+authors = ["Hans Chandler Vidaure"]
+license = "MIT"
+repository = "https://github.com/hansvidaure24/Behavior-Tree-Editor"
+edition = "2024"
+rust-version = "1.90"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "bt_editor_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.12.5", features = [] }
+tauri-plugin-log = "2"

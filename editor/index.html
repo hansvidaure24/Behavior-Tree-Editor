@@ -455,8 +455,8 @@
 
   <div id="drop-overlay"><span>Drop .bt.json or .replay.json</span></div>
 
-  <script src="fuse.min.js"></script>
   <script type="module" src="app.js"></script>
-  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
+  <!-- Offline cache is for the static web build only: skip it in the Tauri app and the Vite dev server (cache-first would serve stale modules). -->
+  <script>if ("serviceWorker" in navigator && !window.__TAURI_INTERNALS__ && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
 </html>

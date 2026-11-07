@@ -1,5 +1,6 @@
 import { Serialization } from './serialization.js';
 import { Storage } from './storage.js';
+import Fuse from './fuse.esm.js';
 
 /** AI-assisted tree generation — fuzzy search over saved templates + built-in patterns. */
 export const AIGen = (() => {
@@ -78,8 +79,8 @@ export const AIGen = (() => {
       nodeText: _nodeText(t.tree),
       data: t.tree,
     }));
-    if (typeof globalThis.Fuse !== "undefined") {
-      _index = new globalThis.Fuse(_templates, {
+    if (typeof Fuse !== "undefined") {
+      _index = new Fuse(_templates, {
         keys: [
           { name: "title", weight: 3 },
           { name: "description", weight: 2 },
