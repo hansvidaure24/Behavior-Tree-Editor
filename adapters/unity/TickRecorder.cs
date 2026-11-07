@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -6,142 +7,158 @@ using UnityEngine;
 namespace BehaviorTreeRuntime
 {
     /// <summary>
-    /// Records every tick of a behavior tree for replay in the editor.
-    /// Attach alongside BehaviorTreeRunner. Toggle recording at runtime.
-    /// Writes a .replay.json file when stopped or on destroy.
+    /// Records every tick of a behavior tree for the editor's replay debugger (.replay.json).
+    /// Add it next to a <see cref="BehaviorTreeRunner"/>, or call <see cref="Attach"/> with any
+    /// <see cref="BehaviorTree"/>. Nodes that did not run in a tick are recorded as "skipped".
     /// </summary>
     public class TickRecorder : MonoBehaviour
     {
-        [Tooltip("Max ticks to keep in memory (ring buffer)")]
-        public int maxTicks = 600; // ~10 seconds at 60fps
+        [Tooltip("Max ticks kept in memory (oldest dropped first).")]
+        public int maxTicks = 600;
 
         public bool recording = true;
 
+        [Tooltip("Folder for saved replays. Empty = Application.persistentDataPath.")]
+        public string outputFolder = "";
+
+        [Tooltip("Save automatically when this object is destroyed (e.g. leaving Play mode).")]
+        public bool saveOnDestroy = true;
+
         BehaviorTreeRunner _runner;
-        readonly List<TickFrame> _frames = new();
-        int _tickCount;
+        BehaviorTree _tree;
+        readonly List<Frame> _frames = new List<Frame>();
+        int _tick;
+
+        public int FrameCount => _frames.Count;
 
         void Awake()
         {
             _runner = GetComponent<BehaviorTreeRunner>();
-            if (_runner == null)
+            if (_runner != null)
             {
-                Debug.LogError("TickRecorder requires BehaviorTreeRunner on the same GameObject");
-                enabled = false;
+                _runner.TreeLoaded += Attach;
+                if (_runner.Tree != null) Attach(_runner.Tree);
             }
         }
 
-        void LateUpdate()
+        /// <summary>Start recording ticks of this tree (replaces any tree recorded before).</summary>
+        public void Attach(BehaviorTree tree)
         {
-            if (!recording || _runner == null) return;
+            if (_tree != null) _tree.Ticked -= Record;
+            _tree = tree;
+            if (_tree != null) _tree.Ticked += Record;
+        }
 
-            var frame = new TickFrame
-            {
-                tick = _tickCount++,
-                timestamp = Time.time,
-                nodes = new Dictionary<string, string>(),
-                blackboard = new Dictionary<string, object>()
-            };
-
-            // Collect node statuses from the last tick
-            CollectStatuses(_runner.Root, frame.nodes);
-
-            // Snapshot blackboard
-            foreach (var kv in _runner.Bb.All())
-                frame.blackboard[kv.Key] = kv.Value;
-
-            if (_frames.Count >= maxTicks)
-                _frames.RemoveAt(0);
+        void Record(BehaviorTree tree)
+        {
+            if (!recording) return;
+            var frame = new Frame { tick = _tick++, timestamp = tree.Time };
+            foreach (var node in tree.Nodes)
+                frame.nodes.Add(new KeyValuePair<string, string>(node.Id, node.LastTick == tree.TickCount ? Lower(node.LastStatus) : "skipped"));
+            foreach (var kv in tree.Blackboard.All())
+                frame.blackboard.Add(new KeyValuePair<string, string>(kv.Key, SerializeValue(kv.Value)));
+            if (_frames.Count >= maxTicks) _frames.RemoveAt(0);
             _frames.Add(frame);
         }
 
-        void CollectStatuses(BTNode node, Dictionary<string, string> statuses)
+        static string Lower(NodeStatus s) => s == NodeStatus.Success ? "success" : s == NodeStatus.Failure ? "failure" : "running";
+
+        /// <summary>Write the recording to disk and return the file path (null if nothing was recorded).</summary>
+        [ContextMenu("Save Recording")]
+        public string Save() => Save(null);
+
+        public string Save(string filename)
         {
-            if (node == null) return;
-            statuses[node.Id] = node.LastStatus.ToString().ToLower();
-            foreach (var child in node.Children)
-                CollectStatuses(child, statuses);
+            if (_frames.Count == 0 || _tree == null) return null;
+            filename ??= $"{gameObject.name}_replay_{System.DateTime.Now:yyyyMMdd_HHmmss}";
+            var folder = string.IsNullOrEmpty(outputFolder) ? Application.persistentDataPath : outputFolder;
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, filename + ".replay.json");
+            File.WriteAllText(path, ToJson());
+            Debug.Log($"TickRecorder: saved {_frames.Count} ticks to {path}", this);
+            return path;
         }
 
-        /// <summary>Call this to save the recording to disk.</summary>
-        public string Save(string filename = null)
+        public string ToJson()
         {
-            if (_frames.Count == 0) return null;
-
-            filename ??= $"{gameObject.name}_replay_{System.DateTime.Now:yyyyMMdd_HHmmss}";
-            var path = Path.Combine(Application.persistentDataPath, filename + ".replay.json");
-
             var sb = new StringBuilder();
-            sb.AppendLine("{");
-            sb.AppendLine("  \"version\": \"1.0\",");
-            sb.AppendLine($"  \"treeTitle\": \"{EscapeJson(_runner.TreeTitle)}\",");
-            sb.AppendLine($"  \"agentId\": \"{EscapeJson(gameObject.name)}\",");
-            sb.AppendLine("  \"ticks\": [");
-
+            sb.Append("{\n  \"version\": \"1.0\",\n");
+            sb.Append($"  \"treeTitle\": {Quote(_tree != null ? _tree.Title : "")},\n");
+            sb.Append($"  \"agentId\": {Quote(gameObject.name)},\n");
+            sb.Append("  \"ticks\": [\n");
             for (int i = 0; i < _frames.Count; i++)
             {
                 var f = _frames[i];
-                sb.Append("    {");
-                sb.Append($"\"tick\":{f.tick},\"timestamp\":{f.timestamp:F3},");
-
-                // Nodes
-                sb.Append("\"nodes\":{");
-                int ni = 0;
-                foreach (var kv in f.nodes)
+                sb.Append("    {\"tick\":").Append(f.tick).Append(",\"timestamp\":").Append(f.timestamp.ToString("F3", CultureInfo.InvariantCulture)).Append(",\"nodes\":{");
+                for (int n = 0; n < f.nodes.Count; n++)
                 {
-                    if (ni++ > 0) sb.Append(",");
-                    sb.Append($"\"{EscapeJson(kv.Key)}\":{{\"status\":\"{kv.Value}\"}}");
+                    if (n > 0) sb.Append(',');
+                    sb.Append(Quote(f.nodes[n].Key)).Append(":{\"status\":\"").Append(f.nodes[n].Value).Append("\"}");
                 }
-                sb.Append("},");
-
-                // Blackboard
-                sb.Append("\"blackboard\":{");
-                int bi = 0;
-                foreach (var kv in f.blackboard)
+                sb.Append("},\"blackboard\":{");
+                for (int b = 0; b < f.blackboard.Count; b++)
                 {
-                    if (bi++ > 0) sb.Append(",");
-                    sb.Append($"\"{EscapeJson(kv.Key)}\":{SerializeValue(kv.Value)}");
+                    if (b > 0) sb.Append(',');
+                    sb.Append(Quote(f.blackboard[b].Key)).Append(':').Append(f.blackboard[b].Value);
                 }
-                sb.Append("}");
-
-                sb.Append(i < _frames.Count - 1 ? "},\n" : "}\n");
+                sb.Append(i < _frames.Count - 1 ? "}},\n" : "}}\n");
             }
-
-            sb.AppendLine("  ]");
-            sb.AppendLine("}");
-
-            File.WriteAllText(path, sb.ToString());
-            Debug.Log($"TickRecorder: saved {_frames.Count} ticks to {path}");
-            return path;
+            sb.Append("  ]\n}\n");
+            return sb.ToString();
         }
 
         void OnDestroy()
         {
-            if (recording && _frames.Count > 0)
-                Save();
+            if (_runner != null) _runner.TreeLoaded -= Attach;
+            if (_tree != null) _tree.Ticked -= Record;
+            if (saveOnDestroy && recording && _frames.Count > 0) Save();
         }
 
-        public void Clear() { _frames.Clear(); _tickCount = 0; }
+        public void Clear() { _frames.Clear(); _tick = 0; }
 
-        static string EscapeJson(string s) => s?.Replace("\\", "\\\\").Replace("\"", "\\\"") ?? "";
+        static string Quote(string s)
+        {
+            var sb = new StringBuilder("\"");
+            foreach (var c in s ?? "")
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < 0x20) sb.Append("\\u").Append(((int)c).ToString("x4"));
+                        else sb.Append(c);
+                        break;
+                }
+            }
+            return sb.Append('"').ToString();
+        }
 
         static string SerializeValue(object v)
         {
-            if (v == null) return "null";
-            if (v is bool b) return b ? "true" : "false";
-            if (v is float f) return f.ToString("G");
-            if (v is double d) return d.ToString("G");
-            if (v is int i) return i.ToString();
-            if (v is string s) return $"\"{EscapeJson(s)}\"";
-            return $"\"{EscapeJson(v.ToString())}\"";
+            switch (v)
+            {
+                case null: return "null";
+                case bool b: return b ? "true" : "false";
+                case float f: return float.IsFinite(f) ? f.ToString("R", CultureInfo.InvariantCulture) : "null";
+                case double d: return double.IsFinite(d) ? d.ToString("R", CultureInfo.InvariantCulture) : "null";
+                case int i: return i.ToString(CultureInfo.InvariantCulture);
+                case long l: return l.ToString(CultureInfo.InvariantCulture);
+                case string s: return Quote(s);
+                case Vector3 v3: return $"[{v3.x.ToString("R", CultureInfo.InvariantCulture)},{v3.y.ToString("R", CultureInfo.InvariantCulture)},{v3.z.ToString("R", CultureInfo.InvariantCulture)}]";
+                default: return Quote(v.ToString());
+            }
         }
 
-        class TickFrame
+        sealed class Frame
         {
             public int tick;
             public float timestamp;
-            public Dictionary<string, string> nodes;
-            public Dictionary<string, object> blackboard;
+            public readonly List<KeyValuePair<string, string>> nodes = new List<KeyValuePair<string, string>>();
+            public readonly List<KeyValuePair<string, string>> blackboard = new List<KeyValuePair<string, string>>();
         }
     }
 }

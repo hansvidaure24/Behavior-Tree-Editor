@@ -1,0 +1,7 @@
+{
+    "name": "BehaviorTreeRuntime",
+    "rootNamespace": "BehaviorTreeRuntime",
+    "references": [],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}

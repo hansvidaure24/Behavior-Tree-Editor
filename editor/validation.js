@@ -44,6 +44,8 @@ export const Validation = (() => {
     const required = { repeat: ["count"], cooldown: ["duration"], timeout: ["seconds"], parallel: ["policy"] };
     for (const n of state.nodes) {
       const reqs = required[n.type];
+      // A cooldown may give a random range (min/max) instead of a fixed duration.
+      if (n.type === "cooldown" && n.parameters.min != null && n.parameters.max != null) continue;
       if (reqs) {
         for (const k of reqs) {
           if (n.parameters[k] == null || n.parameters[k] === "") {
@@ -63,18 +65,6 @@ export const Validation = (() => {
     for (const [name, nodes] of Object.entries(leafNames)) {
       if (nodes.length > 1 && nodes.some(a => nodes.some(b => a.id !== b.id && a.type !== b.type))) {
         warnings.push({ msg: `"${name}" used as both action and condition`, nodeId: nodes[0].id });
-      }
-    }
-    // Duplicate names within same type (likely copy-paste oversight)
-    const namesByType = {};
-    for (const n of state.nodes) {
-      const k = n.type + ":" + n.name;
-      if (namesByType[k]) namesByType[k].push(n);
-      else namesByType[k] = [n];
-    }
-    for (const [, dups] of Object.entries(namesByType)) {
-      if (dups.length > 1 && (dups[0].type === "action" || dups[0].type === "condition")) {
-        warnings.push({ msg: `${dups.length} ${dups[0].type}s named "${dups[0].name}" — intentional?`, nodeId: dups[0].id });
       }
     }
     return warnings;
