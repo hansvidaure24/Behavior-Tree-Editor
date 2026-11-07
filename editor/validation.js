@@ -1,6 +1,13 @@
+// @ts-check
+/** @import { TreeState, Warning } from './types.js' */
 import { NodeTypes } from './nodes.js';
 
 export const Validation = (() => {
+  /**
+   * Structural and naming checks, each tied to a node where possible.
+   * @param {TreeState} state
+   * @returns {Warning[]}
+   */
   function validateDetailed(state) {
     const warnings = [];
     if (state.nodes.length === 0) return warnings;
@@ -73,6 +80,10 @@ export const Validation = (() => {
     return warnings;
   }
 
+  /**
+   * @param {TreeState} state
+   * @returns {string[]} Warning messages only.
+   */
   function validate(state) {
     const warnings = [];
     if (state.nodes.length === 0) return warnings;

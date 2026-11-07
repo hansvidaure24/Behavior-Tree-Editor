@@ -1,3 +1,4 @@
+// @ts-check
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -17,6 +18,7 @@ import { showChoice } from './dialogs.js';
 
 export let fileHandle = null; // File System Access API handle for re-save
 
+/** Pick a .json file and load it; asks whether to merge or replace when the canvas already has nodes. */
 export function importFromFile() {
   const input = document.createElement("input");
   input.type = "file";
@@ -27,7 +29,7 @@ export function importFromFile() {
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const data = JSON.parse(reader.result);
+        const data = JSON.parse(/** @type {string} */ (reader.result));
         if (!data.nodes || !data.root) { toast("Not a valid behavior tree file"); return; }
         const nodeCount = Object.keys(data.nodes).length;
         if (state.nodes.length > 0) {
@@ -135,6 +137,7 @@ async function openFromFileSystem() {
 }
 
 // --- Export (download JSON) ---
+/** Download the tree as .bt.json plus a .bt.layout.json sidecar. */
 export function exportJSON() {
   const warnings = validate();
   if (warnings.length > 0 && !confirm("Warnings:\n• " + warnings.join("\n• ") + "\n\nExport anyway?")) return;
@@ -208,6 +211,11 @@ export function exportJSON() {
 function download(blob, filename) { Exports.download(blob, filename); }
 
 // --- Load dialog ---
+/**
+ * @param {string} dir "examples", "folder" (open project folder) or anything else for IndexedDB saves
+ * @param {string} name
+ * @returns {Promise<void>}
+ */
 export async function loadTreeByRef(dir, name) {
   if (dirty && !confirm("You have unsaved changes. Load anyway?")) return;
   const data = await Storage.loadTree(dir, name);
@@ -231,12 +239,13 @@ export async function loadTreeByRef(dir, name) {
   toast("Loaded " + name);
 }
 
-const loadFilter = document.getElementById("load-filter");
+const loadFilter = /** @type {HTMLInputElement} */ (document.getElementById("load-filter"));
 
 // --- Open Folder ---
 const folderBtn = document.getElementById("btn-folder");
 
 // --- Extract subtree to clipboard ---
+/** @param {string} id */
 export function extractSubtreeToClipboard(id) {
   const { tree } = Canvas.extractSubtree(id);
   const node = state.nodes.find(n => n.id === id);
@@ -290,6 +299,7 @@ export function copyAsImage() {
 }
 
 // --- Paste tree from clipboard (Ctrl+V) ---
+/** Paste JSON nodes, a whole tree, or an indented text outline. */
 export function pasteFromClipboard() {
   navigator.clipboard.readText().then(text => {
     try {
@@ -409,6 +419,7 @@ function pasteAsTextOutline(text) {
   toast(`Pasted ${nodes.length} nodes from text outline`);
 }
 
+/** @param {"unity" | "unreal" | "godot"} engine */
 export function exportEngineAdapter(engine) { Exports.engineAdapter(state, engine, toast); }
 export function copyAsMermaid() { Exports.mermaid(state, toast); }
 export function copyAsAscii() { Exports.ascii(state, toast); }
@@ -438,7 +449,7 @@ function getRecent() {
 // --- localStorage auto-save ---
 const STORAGE_KEY = "bt-editor-autosave";
 
-const autoSaveIndicator = document.getElementById("autosave-indicator");
+const autoSaveIndicator = /** @type {HTMLElement & {_t?: any}} */ (document.getElementById("autosave-indicator"));
 
 let lastAutoSaveTs = 0;
 
@@ -503,6 +514,7 @@ function backupSnapshot() {
   } catch { /* quota */ }
 }
 
+/** @returns {Promise<void>} */
 export async function restoreFromBackup() {
   try {
     const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
@@ -528,7 +540,7 @@ export async function restoreFromBackup() {
 export function initFileIO() {
 
   document.getElementById("btn-export").addEventListener("click", e => {
-    const btn = e.currentTarget;
+    const btn = /** @type {HTMLElement} */ (e.currentTarget);
     const rect = btn.getBoundingClientRect();
     const items = [
       ...("showSaveFilePicker" in window ? [{ label: "💾 Save to Disk", action: saveToFileSystem }, { sep: true }] : []),
@@ -555,13 +567,13 @@ export function initFileIO() {
 
   // --- Save dialog ---
   document.getElementById("btn-save").addEventListener("click", () => {
-    document.getElementById("save-filename").value = state.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "") || "my-tree";
+    /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value = state.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "") || "my-tree";
     document.getElementById("save-dialog").classList.remove("hidden");
-    setTimeout(() => document.getElementById("save-filename").select(), 0);
+    setTimeout(() => /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).select(), 0);
   });
 
   document.getElementById("save-confirm").addEventListener("click", async () => {
-    const filename = document.getElementById("save-filename").value.trim();
+    const filename = /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value.trim();
     if (!filename) return;
     const warnings = validate();
     if (warnings.length > 0 && !confirm("Warnings:\n• " + warnings.join("\n• ") + "\n\nSave anyway?")) return;
@@ -584,7 +596,7 @@ export function initFileIO() {
     document.getElementById("save-dialog").classList.add("hidden");
   });
 
-  document.getElementById("save-filename").addEventListener("keydown", e => {
+  /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).addEventListener("keydown", e => {
     if (e.key === "Enter") document.getElementById("save-confirm").click();
     if (e.key === "Escape") document.getElementById("save-cancel").click();
   });
@@ -672,9 +684,9 @@ export function initFileIO() {
         list.appendChild(item);
       }
 
-      list.querySelectorAll(".load-item[data-dir]").forEach(item => {
+      list.querySelectorAll(".load-item[data-dir]").forEach(/** @param {HTMLElement} item */ item => {
         item.addEventListener("click", (e) => {
-          if (e.target.tagName === "BUTTON") return;
+          if (/** @type {HTMLElement} */ (e.target).tagName === "BUTTON") return;
           loadTreeByRef(item.dataset.dir, item.dataset.name).catch(err => toast("Load failed: " + err.message));
         });
       });
@@ -688,14 +700,14 @@ export function initFileIO() {
   });
   loadFilter.addEventListener("input", () => {
     const q = loadFilter.value.toLowerCase().trim();
-    document.querySelectorAll("#load-list .load-item[data-name]").forEach(item => {
+    document.querySelectorAll("#load-list .load-item[data-name]").forEach(/** @param {HTMLElement} item */ item => {
       item.style.display = !q || item.dataset.name.toLowerCase().includes(q) ? "" : "none";
     });
   });
   loadFilter.addEventListener("keydown", e => {
     if (e.key === "Escape") { loadFilter.value = ""; loadFilter.dispatchEvent(new Event("input")); }
     if (e.key === "Enter") {
-      const visible = document.querySelector("#load-list .load-item[data-name]:not([style*='display: none'])");
+      const visible = /** @type {HTMLElement} */ (document.querySelector("#load-list .load-item[data-name]:not([style*='display: none'])"));
       if (visible) visible.click();
     }
   });
@@ -741,7 +753,7 @@ export function initFileIO() {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const data = JSON.parse(reader.result);
+          const data = JSON.parse(/** @type {string} */ (reader.result));
 
           if (file.name.endsWith(".replay.json") || (data.ticks && Array.isArray(data.ticks))) {
             Replay.load(data);
@@ -773,7 +785,7 @@ export function initFileIO() {
             if (layoutFile) {
               const lr = new FileReader();
               lr.onload = () => {
-                try { loadTree(JSON.parse(lr.result)); } catch { loadTree(null); }
+                try { loadTree(JSON.parse(/** @type {string} */ (lr.result))); } catch { loadTree(null); }
               };
               lr.readAsText(layoutFile);
             } else {
@@ -789,6 +801,7 @@ export function initFileIO() {
   });
 }
 
+/** Restore tabs/auto-save from the last session and start the auto-save and backup timers. */
 export function initPersistence() {
 
   setInterval(() => {

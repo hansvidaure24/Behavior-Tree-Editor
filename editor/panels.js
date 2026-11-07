@@ -1,3 +1,4 @@
+// @ts-check
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -14,6 +15,7 @@ export let outlineOpen = false;
 export const warningsPanel = document.getElementById("warnings-panel");
 const warningsList = document.getElementById("warnings-list");
 
+/** Apply the automatic fixes for current warnings (e.g. remove empty composites/decorators). */
 export function autoFixWarnings() {
   let fixes = 0;
   const childSet = new Set();
@@ -262,7 +264,7 @@ export function updateOutline() {
     if (!visited.has(n.id)) renderNode(n.id, 0);
   }
   // Apply filter
-  const filterQ = document.getElementById("outline-filter").value.toLowerCase().trim();
+  const filterQ = /** @type {HTMLInputElement} */ (document.getElementById("outline-filter")).value.toLowerCase().trim();
   if (filterQ) {
     const matchIds = new Set();
     for (const n of state.nodes) {
@@ -274,7 +276,7 @@ export function updateOutline() {
       if (parent && !matchIds.has(parent.id)) { ancestorIds.add(parent.id); markAncestors(parent.id); }
     }
     for (const id of matchIds) markAncestors(id);
-    for (const row of outlineContent.querySelectorAll(".outline-node")) {
+    for (const row of /** @type {NodeListOf<HTMLElement>} */ (outlineContent.querySelectorAll(".outline-node"))) {
       const nid = row.dataset.nodeId;
       if (matchIds.has(nid)) { row.classList.remove("filter-hidden", "ancestor"); }
       else if (ancestorIds.has(nid)) { row.classList.remove("filter-hidden"); row.classList.add("ancestor"); }
@@ -380,17 +382,18 @@ function updateBBViewer() {
 
 // --- Replay ---
 export const replayBar = document.getElementById("replay-bar");
-const replaySlider = document.getElementById("replay-slider");
+const replaySlider = /** @type {HTMLInputElement} */ (document.getElementById("replay-slider"));
 const replayTickLabel = document.getElementById("replay-tick-label");
 const bbPanel = document.getElementById("blackboard-panel");
 const bbContent = document.getElementById("blackboard-content");
 
+/** Sync the replay bar, blackboard panel and canvas with the current replay tick. */
 export function updateReplayUI() {
   if (!Replay.isActive()) return;
   const tick = Replay.getCurrentTick();
   const total = Replay.getTickCount();
-  replaySlider.max = total - 1;
-  replaySlider.value = tick;
+  replaySlider.max = String(total - 1);
+  replaySlider.value = String(tick);
   replayTickLabel.textContent = `${tick} / ${total - 1}`;
   document.getElementById("replay-play").textContent = Replay.isPlaying() ? "⏸" : "▶";
 
@@ -431,6 +434,7 @@ export function closeReplay() {
 }
 
 // --- Simulate Replay ---
+/** Run the tree in a simple in-editor simulation and load the result as a replay. */
 export function simulateReplay() {
   if (state.nodes.length === 0 || !state.root) { toast("Need a tree with a root to simulate"); return; }
   const nodeById = {};
@@ -613,7 +617,7 @@ export function initPanels() {
   document.getElementById("warning-badge").addEventListener("click", showWarningsPanel);
   document.getElementById("warnings-close").addEventListener("click", () => warningsPanel.classList.add("hidden"));
   document.addEventListener("mousedown", e => {
-    if (!warningsPanel.contains(e.target) && e.target !== document.getElementById("warning-badge")) {
+    if (!warningsPanel.contains(/** @type {Node} */ (e.target)) && e.target !== document.getElementById("warning-badge")) {
       warningsPanel.classList.add("hidden");
     }
   });
@@ -660,7 +664,7 @@ export function initPanels() {
         list.appendChild(item);
       }
 
-      list.querySelectorAll(".load-item").forEach(item => {
+      list.querySelectorAll(".load-item").forEach(/** @param {HTMLElement} item */ item => {
         item.addEventListener("click", async () => {
           try {
             const data = await Storage.loadReplay(item.dataset.dir, item.dataset.name);
@@ -699,7 +703,7 @@ export function initPanels() {
   document.getElementById("replay-close").addEventListener("click", closeReplay);
 
   document.getElementById("replay-speed").addEventListener("change", e => {
-    Replay.setSpeed(parseFloat(e.target.value));
+    Replay.setSpeed(parseFloat(/** @type {HTMLSelectElement} */ (e.target).value));
   });
 }
 

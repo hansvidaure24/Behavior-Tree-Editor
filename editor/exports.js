@@ -1,5 +1,11 @@
+// @ts-check
+/** @import { TreeState } from './types.js' */
 /** Export functions — engine adapters, Mermaid, ASCII tree, Markdown docs. */
 export const Exports = (() => {
+  /**
+   * @param {Blob} blob
+   * @param {string} filename
+   */
   function download(blob, filename) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -8,6 +14,12 @@ export const Exports = (() => {
     URL.revokeObjectURL(a.href);
   }
 
+  /**
+   * Download a starter runtime binding (action/condition stubs) for an engine.
+   * @param {TreeState} state
+   * @param {"unity" | "unreal" | "godot"} engine
+   * @param {(msg: string) => void} toast
+   */
   function engineAdapter(state, engine, toast) {
     if (state.nodes.length === 0) { toast("Nothing to export"); return; }
     const actions = [...new Set(state.nodes.filter(n => n.type === "action").map(n => n.name))].sort();
@@ -99,6 +111,11 @@ func ${c.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase()}() -> bool:
     toast(`Exported ${engine === "unity" ? "C#" : "GDScript"} adapter — ${actions.length} actions, ${conditions.length} conditions`);
   }
 
+  /**
+   * Copy the tree as a Mermaid flowchart.
+   * @param {TreeState} state
+   * @param {(msg: string) => void} toast
+   */
   function mermaid(state, toast) {
     if (state.nodes.length === 0) { toast("Nothing to export"); return; }
     const nodeById = {};
@@ -122,6 +139,11 @@ func ${c.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase()}() -> bool:
     navigator.clipboard.writeText(lines.join("\n")).then(() => toast("Mermaid diagram copied to clipboard"));
   }
 
+  /**
+   * Copy the tree as an indented ASCII outline.
+   * @param {TreeState} state
+   * @param {(msg: string) => void} toast
+   */
   function ascii(state, toast) {
     if (state.nodes.length === 0) { toast("Nothing to export"); return; }
     const nodeById = {};
@@ -145,6 +167,11 @@ func ${c.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase()}() -> bool:
 
   const mdEsc = s => s.replace(/\|/g, "\\|");
 
+  /**
+   * Download Markdown documentation for the tree.
+   * @param {TreeState} state
+   * @param {(msg: string) => void} toast
+   */
   function markdown(state, toast) {
     if (state.nodes.length === 0) { toast("Nothing to export"); return; }
     const nodeById = {};

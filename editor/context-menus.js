@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { TreeState, BTNode, Connection } from './types.js' */
 import { NodeTypes } from './nodes.js';
 import { Serialization } from './serialization.js';
 import { Canvas } from './canvas.js';
@@ -7,12 +9,17 @@ import { Properties } from './properties.js';
 export const ContextMenus = (() => {
   let _ctxMenu, _state, _cb;
 
+  /** @param {{ctxMenu: HTMLElement, state: TreeState, callbacks: Object}} deps Callbacks are editor actions the menus invoke. */
   function init({ ctxMenu, state, callbacks }) {
     _ctxMenu = ctxMenu;
     _state = state;
     _cb = callbacks;
   }
 
+  /**
+   * Append items to the open menu. Items: `{label, action, shortcut?, disabled?}` or `{sep: true}`.
+   * @param {Object[]} items
+   */
   function renderCtxItems(items) {
     for (const item of items) {
       if (item.sep) {
@@ -42,6 +49,11 @@ export const ContextMenus = (() => {
     }
   }
 
+  /**
+   * Show the menu at client coordinates, kept inside the viewport.
+   * @param {number} cx
+   * @param {number} cy
+   */
   function positionCtxMenu(cx, cy) {
     _ctxMenu.classList.remove("hidden");
     const mw = _ctxMenu.offsetWidth, mh = _ctxMenu.offsetHeight;
@@ -49,6 +61,11 @@ export const ContextMenus = (() => {
     _ctxMenu.style.top = Math.min(cy, window.innerHeight - mh - 8) + "px";
   }
 
+  /**
+   * @param {BTNode} node
+   * @param {number} cx
+   * @param {number} cy
+   */
   function showContextMenu(node, cx, cy) {
     _ctxMenu.textContent = "";
     const sel = Canvas.getSelectedIds();
@@ -87,7 +104,7 @@ export const ContextMenus = (() => {
       const isRoot = _state.root === node.id;
       const hasChildren = node.children.length > 0;
       items = [
-        { label: "Rename", hint: "F2", action: () => { Canvas.focusNode(node.id); setTimeout(() => { const el = document.getElementById("prop-name"); if (el) { el.focus(); el.select(); } }, 0); }},
+        { label: "Rename", hint: "F2", action: () => { Canvas.focusNode(node.id); setTimeout(() => { const el = /** @type {HTMLInputElement} */ (document.getElementById("prop-name")); if (el) { el.focus(); el.select(); } }, 0); }},
         { label: isRoot ? "Root node" : "Set as Root", action: () => { _state.root = node.id; _cb.onChanged(); }, disabled: isRoot },
         { label: "Duplicate", hint: "D", action: () => { Canvas.setSelectedIds([node.id]); Canvas.copySelected(); }},
       ];
@@ -148,6 +165,11 @@ export const ContextMenus = (() => {
     positionCtxMenu(cx, cy);
   }
 
+  /**
+   * @param {Connection} conn
+   * @param {number} cx
+   * @param {number} cy
+   */
   function showConnectionContextMenu(conn, cx, cy) {
     _ctxMenu.textContent = "";
     const parent = _state.nodes.find(n => n.id === conn.parentId);
@@ -198,6 +220,14 @@ export const ContextMenus = (() => {
     positionCtxMenu(cx, cy);
   }
 
+  /**
+   * Menu shown when a connection is dropped on empty canvas: create a child there.
+   * @param {string} parentId
+   * @param {number} wx
+   * @param {number} wy
+   * @param {number} cx
+   * @param {number} cy
+   */
   function showQuickCreate(parentId, wx, wy, cx, cy) {
     _ctxMenu.textContent = "";
     const header = document.createElement("div");
@@ -246,6 +276,12 @@ export const ContextMenus = (() => {
     });
   }
 
+  /**
+   * @param {number} wx World x
+   * @param {number} wy World y
+   * @param {number} cx Client x
+   * @param {number} cy Client y
+   */
   function showCanvasContextMenu(wx, wy, cx, cy) {
     _ctxMenu.textContent = "";
     const nodeTypes = [
@@ -322,12 +358,12 @@ export const ContextMenus = (() => {
       const sep4 = document.createElement("div");
       sep4.className = "ctx-sep";
       _ctxMenu.appendChild(sep4);
-      for (const [label, action] of [
+      for (const [label, action] of /** @type {[string, () => void][]} */ ([
         ["Select All", () => Canvas.setSelectedIds(_state.nodes.map(n => n.id))],
         ["Fit View", () => Canvas.centerView(true)],
         ["Auto-Layout", () => { Canvas.animatedAutoLayout(); Canvas.centerView(true); }],
         ["Copy as Image", () => _cb.copyAsImage()],
-      ]) {
+      ])) {
         const div = document.createElement("div");
         div.className = "ctx-item";
         div.textContent = label;
@@ -342,6 +378,7 @@ export const ContextMenus = (() => {
     _ctxMenu.style.top = Math.min(cy, window.innerHeight - cmh - 8) + "px";
   }
 
+  /** @param {BTNode} node */
   function showTypePicker(node) {
     _ctxMenu.textContent = "";
     const types = NodeTypes.allTypes().filter(t => t !== node.type);
@@ -375,6 +412,7 @@ export const ContextMenus = (() => {
     _ctxMenu.style.top = Math.min(window.innerHeight / 2, window.innerHeight - 300) + "px";
   }
 
+  /** @param {BTNode} node */
   function showWrapPicker(node) {
     _ctxMenu.textContent = "";
     const decorators = ["invert", "repeat", "cooldown", "timeout", "guard"];

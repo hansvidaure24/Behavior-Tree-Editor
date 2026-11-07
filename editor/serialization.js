@@ -1,9 +1,20 @@
+// @ts-check
+/** @import { TreeState, SerializedTree, SerializedLayout } from './types.js' */
 /** Converts between editor state and JSON format. */
 export const Serialization = (() => {
+  /**
+   * Short random id for a new node.
+   * @returns {string} 8 hex characters
+   */
   function uid() {
     return crypto.randomUUID().slice(0, 8);
   }
 
+  /**
+   * Split editor state into the logic file and the layout sidecar.
+   * @param {TreeState} editorState
+   * @returns {{tree: SerializedTree, layout: SerializedLayout}}
+   */
   function toJSON(editorState) {
     const tree = {
       version: "1.0",
@@ -33,6 +44,12 @@ export const Serialization = (() => {
     return { tree, layout };
   }
 
+  /**
+   * Rebuild editor state from a .bt.json tree and optional .bt.layout.json layout.
+   * @param {SerializedTree} treeData
+   * @param {SerializedLayout} [layoutData] Missing positions default to (0, 0).
+   * @returns {TreeState}
+   */
   function fromJSON(treeData, layoutData) {
     const nodes = [];
     const layout = layoutData || { nodes: {} };

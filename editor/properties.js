@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { TreeState } from './types.js' */
 import { NodeTypes } from './nodes.js';
 import { Replay } from './replay.js';
 
@@ -7,12 +9,21 @@ export const Properties = (() => {
   let state = null;
   let onChanged = null;
 
+  /**
+   * @param {HTMLElement} el Container the panel renders into.
+   * @param {TreeState} editorState
+   * @param {{onChanged: () => void}} callbacks
+   */
   function init(el, editorState, callbacks) {
     container = el;
     state = editorState;
     onChanged = callbacks.onChanged;
   }
 
+  /**
+   * Render node properties for the selection (tree properties when nothing is selected).
+   * @param {string[]} selectedIds
+   */
   function show(selectedIds) {
     if (selectedIds.length !== 1) {
       if (selectedIds.length > 1) {
@@ -155,7 +166,7 @@ export const Properties = (() => {
             wbr(state.root, 0);
             const maxB = Math.max(1, ...Object.values(nb));
             let bars = "";
-            for (const [d, c] of Object.entries(nb).sort((a, b) => a[0] - b[0])) {
+            for (const [d, c] of Object.entries(nb).sort((a, b) => Number(a[0]) - Number(b[0]))) {
               const pct = Math.round(c / maxB * 100);
               bars += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="width:16px;text-align:right;font-size:10px;color:#666;">d${d}</span><div style="height:10px;width:${pct}%;background:linear-gradient(90deg,#53a8b6,#53a8b644);border-radius:3px;min-width:4px;"></div><span style="font-size:10px;color:#888;">${c}</span></div>`;
             }
@@ -508,6 +519,7 @@ export const Properties = (() => {
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  /** @param {TreeState} s */
   function setState(s) { state = s; }
 
   return { init, show, setState };

@@ -1,3 +1,4 @@
+// @ts-check
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
 import { Canvas } from './canvas.js';
@@ -22,12 +23,20 @@ function snapshotTab() {
   return { title: state.title, tree, layout, dirty };
 }
 
+/**
+ * @param {string} [title]
+ * @returns {string} The new tab id.
+ */
 export function createTab(title) {
   const id = newTabId();
   tabs.push({ id, title: title || "Untitled", tree: null, layout: null, dirty: false });
   return id;
 }
 
+/**
+ * Snapshot the active tab and load another into the editor.
+ * @param {string} id
+ */
 export function switchTab(id) {
   if (activeTabId === id) return;
   // Save current tab state
@@ -77,6 +86,7 @@ export function switchTab(id) {
   renderTabs();
 }
 
+/** @param {string} id */
 export function closeTab(id) {
   const idx = tabs.findIndex(t => t.id === id);
   if (idx < 0) return;
@@ -116,7 +126,7 @@ export function renderTabs() {
     if (nodeCount > 0 && tab.id !== activeTabId) {
       const count = document.createElement("span");
       count.className = "tab-count";
-      count.textContent = nodeCount;
+      count.textContent = String(nodeCount);
       el.append(label, count);
     } else {
       el.append(label);
@@ -162,6 +172,7 @@ export function renderTabs() {
   }
 }
 
+/** Wire the + button and open the first tab. */
 export function initTabs() {
 
   tabAddBtn.addEventListener("click", () => {

@@ -1,3 +1,4 @@
+// @ts-check
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -14,6 +15,12 @@ import { copyAsAscii, copyAsImage, copyAsMermaid, copySelectedToClipboard, copyT
 
 /** Modal dialogs — choice prompt, stats, AI generate, version history, search, find & replace, command palette, help, onboarding. */
 
+/**
+ * Modal list of choices.
+ * @param {string} title
+ * @param {{label: string, value: any, detail?: string}[]} options
+ * @returns {Promise<any>} The chosen option's value, or null if cancelled.
+ */
 export function showChoice(title, options) {
   return new Promise(resolve => {
     const dlg = document.getElementById("choice-dialog");
@@ -107,7 +114,7 @@ export function showStats() {
 
 // --- AI Generate ---
 const aiDialog = document.getElementById("ai-dialog");
-const aiInput = document.getElementById("ai-input");
+const aiInput = /** @type {HTMLInputElement} */ (document.getElementById("ai-input"));
 const aiHints = document.getElementById("ai-hints");
 
 export function openAI() {
@@ -166,7 +173,7 @@ function probeOllama() {
 async function doGenerate() {
   const desc = aiInput.value.trim();
   if (!desc) return;
-  const btn = document.getElementById("ai-generate");
+  const btn = /** @type {HTMLButtonElement} */ (document.getElementById("ai-generate"));
   btn.disabled = true;
 
   // Try Ollama directly (no server proxy needed)
@@ -303,7 +310,7 @@ async function showVersionHistory() {
 
 // --- Search / Find node (Ctrl+F) ---
 const searchDialog = document.getElementById("search-dialog");
-const searchInput = document.getElementById("search-input");
+const searchInput = /** @type {HTMLInputElement} */ (document.getElementById("search-input"));
 const searchResults = document.getElementById("search-results");
 
 export function openSearch() {
@@ -317,8 +324,8 @@ const searchCount = document.getElementById("search-count");
 
 // --- Find & Replace (Ctrl+H) ---
 const replaceDialog = document.getElementById("replace-dialog");
-const replaceFind = document.getElementById("replace-find");
-const replaceWith = document.getElementById("replace-with");
+const replaceFind = /** @type {HTMLInputElement} */ (document.getElementById("replace-find"));
+const replaceWith = /** @type {HTMLInputElement} */ (document.getElementById("replace-with"));
 const replacePreview = document.getElementById("replace-preview");
 
 export function openReplace() {
@@ -365,7 +372,7 @@ function updateReplacePreview() {
 
 // --- Command palette (Ctrl+P) ---
 const cmdPalette = document.getElementById("cmd-palette");
-const cmdInput = document.getElementById("cmd-input");
+const cmdInput = /** @type {HTMLInputElement} */ (document.getElementById("cmd-input"));
 const cmdResults = document.getElementById("cmd-results");
 
 function getCommands() {
@@ -423,7 +430,7 @@ function getCommands() {
     { label: "Center on Selection (Home)", action: () => { const sel = Canvas.getSelectedIds(); if (sel.length > 0) Canvas.zoomToSelection(); else Canvas.centerView(true); }},
     { label: "Focus Path to Selected (P)", action: () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" })); }},
     { label: "Change Node Type (T)", action: () => { const sel = Canvas.getSelectedIds(); if (sel.length === 1) { const n = state.nodes.find(nd => nd.id === sel[0]); if (n) showTypePicker(n); } else toast("Select one node"); }},
-    { label: "Save As (Ctrl+Shift+S)", action: () => { document.getElementById("save-filename").value = ""; document.getElementById("save-dialog").classList.remove("hidden"); setTimeout(() => document.getElementById("save-filename").focus(), 0); }},
+    { label: "Save As (Ctrl+Shift+S)", action: () => { /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value = ""; document.getElementById("save-dialog").classList.remove("hidden"); setTimeout(() => /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).focus(), 0); }},
     { label: "Show Warnings", action: () => showWarningsPanel() },
     { label: "Auto-fix Warnings", action: () => autoFixWarnings() },
     { label: "Tree Statistics (Ctrl+Shift+I)", action: () => showStats() },
@@ -448,7 +455,7 @@ function getCommands() {
     { label: "Isolate Subtree (Enter)", action: () => { const sel = Canvas.getSelectedIds(); if (sel.length === 1) { const n = state.nodes.find(x => x.id === sel[0]); if (n && n.children.length > 0) { Canvas.isolateSubtree(sel[0]); Canvas.zoomToSubtree(sel[0]); toast("Isolated: " + n.name); } else toast("Select a node with children"); } else toast("Select one node"); } },
     { label: "Exit Isolation (Esc)", action: () => { if (Canvas.isIsolated()) { Canvas.exitIsolation(); Canvas.centerView(true); toast("Exited isolation"); } else toast("Not in isolation mode"); } },
     { label: "Collapse All Subtrees", action: () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "C", shiftKey: true })); }},
-    { label: "Focus Palette Search (/)", action: () => { const pal = document.getElementById("palette"); if (pal.style.display === "none") togglePalette(); const pf = document.getElementById("palette-filter"); pf.focus(); pf.select(); }},
+    { label: "Focus Palette Search (/)", action: () => { const pal = document.getElementById("palette"); if (pal.style.display === "none") togglePalette(); const pf = /** @type {HTMLInputElement} */ (document.getElementById("palette-filter")); pf.focus(); pf.select(); }},
     { label: "Toggle Palette Panel (Ctrl+B)", action: () => togglePalette() },
     { label: "Toggle Properties Panel (Ctrl+\\)", action: () => toggleProperties() },
     { label: "Restore from Backup", action: () => restoreFromBackup() },
@@ -636,7 +643,7 @@ export function initDialogs() {
       const prev = items[Math.max(idx - 1, 0)];
       if (prev) { prev.classList.add("cmd-active"); prev.scrollIntoView({ block: "nearest" }); }
     } else if (e.key === "Enter") {
-      const sel = searchResults.querySelector(".cmd-active") || items[0];
+      const sel = /** @type {HTMLElement} */ (searchResults.querySelector(".cmd-active") || items[0]);
       if (sel) sel.click();
     }
   });
@@ -685,7 +692,7 @@ export function initDialogs() {
       const prev = items[Math.max(idx - 1, 0)];
       if (prev) { prev.classList.add("cmd-active"); prev.scrollIntoView({ block: "nearest" }); }
     } else if (e.key === "Enter") {
-      const sel = cmdResults.querySelector(".cmd-active") || items[0];
+      const sel = /** @type {HTMLElement} */ (cmdResults.querySelector(".cmd-active") || items[0]);
       if (sel) sel.click();
     }
   });
@@ -703,6 +710,7 @@ export function initDialogs() {
   });
 }
 
+/** First-run overlay; shown once per browser profile. */
 export function showOnboarding() {
   // --- First-run onboarding ---
   if (!localStorage.getItem("bt-onboarded")) {

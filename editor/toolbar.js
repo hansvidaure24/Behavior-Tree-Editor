@@ -1,3 +1,4 @@
+// @ts-check
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -9,6 +10,7 @@ import { loadTreeByRef } from './file-io.js';
 
 /** Toolbar buttons, node palette (drag/click-to-add, templates, filter), zoom controls, title editing, theme. */
 
+/** Show how many nodes of each type the tree has next to each palette entry. */
 export function updatePaletteCounts() {
   const counts = { composite: 0, leaf: 0, decorator: 0 };
   const typeCounts = {};
@@ -16,14 +18,14 @@ export function updatePaletteCounts() {
     counts[n.category] = (counts[n.category] || 0) + 1;
     typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
   }
-  document.querySelectorAll(".palette-section").forEach(sec => {
+  document.querySelectorAll(".palette-section").forEach(/** @param {HTMLElement} sec */ sec => {
     const text = sec.textContent.replace(/\s*\(\d+\)/, "");
     const raw = text.toLowerCase().replace(/s$/, "");
     const cat = raw === "leave" ? "leaf" : raw;
     const count = counts[cat] || 0;
     sec.textContent = count > 0 ? `${text} (${count})` : text;
   });
-  document.querySelectorAll(".palette-item[data-type]").forEach(el => {
+  document.querySelectorAll(".palette-item[data-type]").forEach(/** @param {HTMLElement} el */ el => {
     const type = el.dataset.type;
     let badge = el.querySelector(".type-count");
     const c = typeCounts[type] || 0;
@@ -86,7 +88,12 @@ export const TEMPLATES = {
 function getUserTemplates() { return JSON.parse(localStorage.getItem("bt-user-templates") || "[]"); }
 function setUserTemplates(list) { localStorage.setItem("bt-user-templates", JSON.stringify(list)); }
 
+/**
+ * Save the subtree under `rootId` as a reusable palette template (localStorage).
+ * @param {string} rootId
+ */
 export function saveAsTemplate(rootId) {
+  /** @type {{tree: {nodes: Record<string, any>}, layout: {nodes: Record<string, {x: number, y: number}>}}} */
   const { tree, layout } = Canvas.extractSubtree(rootId);
   // Merge layout positions into tree nodes for self-contained templates
   for (const [id, pos] of Object.entries(layout.nodes)) {
@@ -215,6 +222,7 @@ export function toggleTheme() {
   toast(isLight ? "Light theme" : "Dark theme");
 }
 
+/** Wire toolbar buttons, palette drag/click-to-add, templates, filter, title editing and zoom controls. */
 export function initToolbar() {
   Canvas.setOnZoomChange(z => { zoomLevelEl.textContent = Math.round(z * 100) + "%"; });
   zoomLevelEl.addEventListener("click", e => {
@@ -230,7 +238,7 @@ export function initToolbar() {
   });
 
   document.getElementById("empty-examples").addEventListener("click", e => {
-    const btn = e.target.closest("[data-example]");
+    const btn = /** @type {HTMLElement} */ (/** @type {HTMLElement} */ (e.target).closest("[data-example]"));
     if (!btn) return;
     loadTreeByRef("examples", btn.dataset.example).catch(err => toast("Load failed: " + err.message));
   });
@@ -239,7 +247,7 @@ export function initToolbar() {
   dragGhost.style.position = "fixed"; dragGhost.style.left = "-9999px";
   document.body.appendChild(dragGhost);
 
-  document.querySelectorAll(".palette-item").forEach(item => {
+  document.querySelectorAll(".palette-item").forEach(/** @param {HTMLElement} item */ item => {
     item.addEventListener("dragstart", e => {
       e.dataTransfer.setData("node-type", item.dataset.type);
       e.dataTransfer.setData("node-category", item.dataset.category);
@@ -261,7 +269,7 @@ export function initToolbar() {
       }
     });
   });
-  document.querySelectorAll(".palette-item:not(.template-item)").forEach(item => {
+  document.querySelectorAll(".palette-item:not(.template-item)").forEach(/** @param {HTMLElement} item */ item => {
     item.addEventListener("click", () => {
       Canvas.addNodeAtCenter(item.dataset.type);
     });
@@ -273,7 +281,7 @@ export function initToolbar() {
       item.appendChild(badge);
     }
   });
-  document.querySelectorAll(".template-item").forEach(item => {
+  document.querySelectorAll(".template-item").forEach(/** @param {HTMLElement} item */ item => {
     item.addEventListener("click", () => {
       const tmpl = TEMPLATES[item.dataset.template];
       if (!tmpl) return;
@@ -293,7 +301,7 @@ export function initToolbar() {
   renderUserTemplates();
 
   // --- Collapsible palette sections ---
-  document.querySelectorAll(".palette-section").forEach(sec => {
+  document.querySelectorAll(".palette-section").forEach(/** @param {HTMLElement} sec */ sec => {
     sec.style.cursor = "pointer";
     sec.style.userSelect = "none";
     const arrow = document.createElement("span");
@@ -307,7 +315,7 @@ export function initToolbar() {
       let next = section.nextElementSibling;
       while (next && !next.classList.contains("palette-section")) {
         next.style.display = collapse ? "none" : "";
-        next = next.nextElementSibling;
+        next = /** @type {HTMLElement} */ (next.nextElementSibling);
       }
     }
 
@@ -316,27 +324,27 @@ export function initToolbar() {
     });
 
     sec.addEventListener("dblclick", () => {
-      document.querySelectorAll(".palette-section").forEach(other => {
+      document.querySelectorAll(".palette-section").forEach(/** @param {HTMLElement} other */ other => {
         setCollapsed(other, other !== sec);
       });
     });
   });
 
   // --- Palette filter ---
-  document.getElementById("palette-filter").addEventListener("input", e => {
+  document.getElementById("palette-filter").addEventListener("input", /** @param {Event & {target: HTMLInputElement}} e */ e => {
     const q = e.target.value.toLowerCase().trim();
     let anyMatch = false;
-    document.querySelectorAll(".palette-item").forEach(item => {
+    document.querySelectorAll(".palette-item").forEach(/** @param {HTMLElement} item */ item => {
       const match = !q || (item.dataset.type && item.dataset.type.includes(q)) || item.textContent.toLowerCase().includes(q);
       item.style.display = match ? "" : "none";
       if (match) anyMatch = true;
     });
-    document.querySelectorAll(".palette-section").forEach(sec => {
-      let next = sec.nextElementSibling;
+    document.querySelectorAll(".palette-section").forEach(/** @param {HTMLElement} sec */ sec => {
+      let next = /** @type {HTMLElement} */ (sec.nextElementSibling);
       let anyVisible = false;
       while (next && !next.classList.contains("palette-section")) {
         if (next.style.display !== "none") anyVisible = true;
-        next = next.nextElementSibling;
+        next = /** @type {HTMLElement} */ (next.nextElementSibling);
       }
       sec.style.display = anyVisible ? "" : "none";
     });
@@ -355,18 +363,18 @@ export function initToolbar() {
       noMatch.style.display = "none";
     }
   });
-  document.getElementById("palette-filter").addEventListener("keydown", e => {
+  document.getElementById("palette-filter").addEventListener("keydown", /** @param {KeyboardEvent & {target: HTMLInputElement}} e */ e => {
     if (e.key === "Escape") {
       e.target.value = "";
       e.target.dispatchEvent(new Event("input"));
       e.target.blur();
     }
     if (e.key === "Enter") {
-      const first = document.querySelector(".palette-item:not(.template-item):not([style*='display: none'])");
+      const first = /** @type {HTMLElement} */ (document.querySelector(".palette-item:not(.template-item):not([style*='display: none'])"));
       if (first && first.dataset.type) {
         Canvas.addNodeAtCenter(first.dataset.type);
         const cat = NodeTypes.categoryOf(first.dataset.type);
-        if (cat === "leaf") setTimeout(() => { const el = document.getElementById("prop-name"); if (el) { el.focus(); el.select(); } }, 50);
+        if (cat === "leaf") setTimeout(() => { const el = /** @type {HTMLInputElement} */ (document.getElementById("prop-name")); if (el) { el.focus(); el.select(); } }, 50);
         e.target.value = "";
         e.target.dispatchEvent(new Event("input"));
         e.target.blur();

@@ -1,3 +1,4 @@
+// @ts-check
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -14,11 +15,12 @@ import { copySelectedToClipboard, copyToClipboard, exportJSON, extractSubtreeToC
 /** Global keyboard shortcuts. */
 
 let warningIdx = 0;
+/** Restart warning cycling (the N shortcut) from the first warning. */
 export function resetWarningIdx() { warningIdx = 0; }
 
 export function initKeyboardShortcuts() {
   // --- Keyboard shortcuts ---
-  document.addEventListener("keydown", e => {
+  document.addEventListener("keydown", /** @param {KeyboardEvent & {target: HTMLElement}} e */ e => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
 
     // Tab shortcuts
@@ -63,7 +65,7 @@ export function initKeyboardShortcuts() {
           Canvas.addNodeAtCenter("action");
           const newSel = Canvas.getSelectedIds();
           if (newSel.length === 1) {
-            setTimeout(() => { const el = document.getElementById("prop-name"); if (el) { el.focus(); el.select(); } }, 50);
+            setTimeout(() => { const el = /** @type {HTMLInputElement} */ (document.getElementById("prop-name")); if (el) { el.focus(); el.select(); } }, 50);
           }
         } else { toast("Can't add child here"); }
       } else { Canvas.addNodeAtCenter("action"); }
@@ -90,7 +92,7 @@ export function initKeyboardShortcuts() {
       e.preventDefault();
       const sel = Canvas.getSelectedIds();
       if (sel.length === 1) {
-        const el = document.getElementById("prop-name");
+        const el = /** @type {HTMLInputElement} */ (document.getElementById("prop-name"));
         if (el) { el.focus(); el.select(); }
       } else if (sel.length > 1) {
         const prefix = prompt("Rename " + sel.length + " nodes — enter prefix:");
@@ -281,7 +283,7 @@ export function initKeyboardShortcuts() {
 
     if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
-      const pf = document.getElementById("palette-filter");
+      const pf = /** @type {HTMLInputElement} */ (document.getElementById("palette-filter"));
       const pal = document.getElementById("palette");
       if (pal.style.display === "none") togglePalette();
       pf.focus();
@@ -335,7 +337,7 @@ export function initKeyboardShortcuts() {
           setTimeout(() => {
             const sel = Canvas.getSelectedIds();
             if (sel.length === 1) {
-              const el = document.getElementById("prop-name");
+              const el = /** @type {HTMLInputElement} */ (document.getElementById("prop-name"));
               if (el) { el.focus(); el.select(); }
             }
           }, 50);
@@ -592,9 +594,9 @@ export function initKeyboardShortcuts() {
       if (e.key === "y") { e.preventDefault(); History.redo(); }
       if (e.key === "s" && e.shiftKey) {
         e.preventDefault();
-        document.getElementById("save-filename").value = "";
+        /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value = "";
         document.getElementById("save-dialog").classList.remove("hidden");
-        setTimeout(() => document.getElementById("save-filename").focus(), 0);
+        setTimeout(() => /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).focus(), 0);
       } else if (e.key === "s") {
         e.preventDefault();
         if (fileHandle) {

@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { BTNode, Warning } from './types.js' */
 import { NodeTypes } from './nodes.js';
 import { History } from './history.js';
 import { Serialization } from './serialization.js';
@@ -16,17 +18,22 @@ import { initKeyboardShortcuts, resetWarningIdx } from './keyboard-shortcuts.js'
 
 export let state = { title: "Untitled", description: "", root: "", nodes: [] };
 export let dirty = false;
+/**
+ * Set the unsaved-changes flag without updating the UI (tab switching).
+ * @param {boolean} d
+ */
 export function setDirtyFlag(d) { dirty = d; }
 
 export const ctxMenu = document.getElementById("context-menu");
 
-const canvas = document.getElementById("canvas");
-const minimap = document.getElementById("minimap");
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
+const minimap = /** @type {HTMLCanvasElement} */ (document.getElementById("minimap"));
 const propsEl = document.getElementById("props-content");
 
 // --- Toast ---
+/** @param {string} msg Shown briefly at the bottom of the window. */
 export function toast(msg) {
-  let el = document.getElementById("toast");
+  let el = /** @type {HTMLElement & {_t?: any}} */ (document.getElementById("toast"));
   if (!el) {
     el = document.createElement("div");
     el.id = "toast";
@@ -39,11 +46,16 @@ export function toast(msg) {
 }
 
 // --- History / State ---
+/** Snapshot the current state onto the undo stack. */
 export function pushHistory() {
   const { tree, layout } = Serialization.toJSON(state);
   History.push({ tree, layout });
 }
 
+/**
+ * Set the unsaved-changes flag and refresh the title, tab label and stats tooltip.
+ * @param {boolean} d
+ */
 export function setDirty(d) {
   dirty = d;
   const title = state.title || "Untitled";
@@ -65,14 +77,15 @@ export function setDirty(d) {
 }
 
 export function updateUndoRedoButtons() {
-  const undoBtn = document.getElementById("btn-undo");
-  const redoBtn = document.getElementById("btn-redo");
+  const undoBtn = /** @type {HTMLButtonElement} */ (document.getElementById("btn-undo"));
+  const redoBtn = /** @type {HTMLButtonElement} */ (document.getElementById("btn-redo"));
   undoBtn.disabled = !History.canUndo();
   redoBtn.disabled = !History.canRedo();
   undoBtn.title = History.canUndo() ? `Undo (Ctrl+Z) — ${History.getUndoCount()} step${History.getUndoCount() !== 1 ? "s" : ""}` : "Nothing to undo";
   redoBtn.title = History.canRedo() ? `Redo (Ctrl+Shift+Z) — ${History.getRedoCount()} step${History.getRedoCount() !== 1 ? "s" : ""}` : "Nothing to redo";
 }
 
+/** Re-run validation and update the warning badge. */
 export function updateWarnings() {
   const w = validate();
   const wd = validateDetailed();
@@ -89,6 +102,7 @@ export function updateWarnings() {
 }
 
 export let _extraOnChanged = [];
+/** Call after any edit: redraw, record history, mark dirty, refresh panels. */
 export function onChanged() {
   Canvas.notifyChanged();
   pushHistory();
@@ -177,7 +191,12 @@ function restoreState(snapshot, msg) {
 // --- Context menu ---
 
 function showContextMenu(node, cx, cy) { ContextMenus.showContextMenu(node, cx, cy); }
+/** @param {Object[]} items */
 export function renderCtxItems(items) { ContextMenus.renderCtxItems(items); }
+/**
+ * @param {number} cx
+ * @param {number} cy
+ */
 export function positionCtxMenu(cx, cy) { ContextMenus.positionCtxMenu(cx, cy); }
 function showConnectionContextMenu(conn, cx, cy) { ContextMenus.showConnectionContextMenu(conn, cx, cy); }
 
@@ -205,6 +224,10 @@ function wrapInDecorator(node, type) {
   Canvas.focusNode(wrapper.id);
 }
 
+/**
+ * Replace a decorator with its only child.
+ * @param {BTNode} node
+ */
 export function unwrapDecorator(node) {
   if (node.children.length !== 1) return;
   const childId = node.children[0];
@@ -236,6 +259,7 @@ function flattenComposite(node) {
   toast(`Flattened ${node.name} — ${node.children.length} children moved to ${parent.name}`);
 }
 
+/** Wrap the selected nodes in a new Sequence. */
 export function groupIntoSequence() {
   const sel = Canvas.getSelectedIds();
   if (sel.length < 1) { toast("Select nodes to group"); return; }
@@ -279,15 +303,20 @@ export function groupIntoSequence() {
 
 function showQuickCreate(parentId, wx, wy, cx, cy) { ContextMenus.showQuickCreate(parentId, wx, wy, cx, cy); }
 function showCanvasContextMenu(wx, wy, cx, cy) { ContextMenus.showCanvasContextMenu(wx, wy, cx, cy); }
+/** @param {BTNode} node */
 export function showTypePicker(node) { ContextMenus.showTypePicker(node); }
+/** @param {BTNode} node */
 export function showWrapPicker(node) { ContextMenus.showWrapPicker(node); }
 
 // --- Validation ---
+/** @returns {Warning[]} */
 export function validateDetailed() { return Validation.validateDetailed(state); }
 
+/** @returns {string[]} */
 export function validate() { return Validation.validate(state); }
 
 // --- Select all of type ---
+/** @param {string} type */
 export function selectAllOfType(type) {
   const ids = state.nodes.filter(n => n.type === type).map(n => n.id);
   Canvas.setSelectedIds(ids);
@@ -322,7 +351,7 @@ ContextMenus.init({
   },
 });
 document.addEventListener("mousedown", e => {
-  if (!ctxMenu.contains(e.target)) ctxMenu.classList.add("hidden");
+  if (!ctxMenu.contains(/** @type {Node} */ (e.target))) ctxMenu.classList.add("hidden");
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") ctxMenu.classList.add("hidden");
