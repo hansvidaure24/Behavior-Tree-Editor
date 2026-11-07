@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Not run here: editor/test_roundtrip.html and editor/test_serialization.html are
+# browser-only test pages (they render results into the DOM, no headless runner).
+# Open them from a local server to run them.
+
+jobs:
+  python:
+    name: Validate trees + Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate example trees
+        run: python validate.py examples/
+      - name: Unit tests (server/test_models.py)
+        run: |
+          pip install pytest
+          pytest server -q
+
+  tauri:
+    name: Frontend build + cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux system libraries for Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # tauri::generate_context!() embeds dist/, so the frontend must be built before cargo check.
+      - name: Vite build
+        run: npm run build
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: cargo check
+        run: cargo check --manifest-path src-tauri/Cargo.toml --locked
