@@ -13,6 +13,7 @@ import { activeTabId, createTab, renderTabs, switchTab, tabs } from './tab-manag
 import { updatePaletteCounts } from './toolbar.js';
 import { replayBar } from './panels.js';
 import { showChoice } from './dialogs.js';
+import * as Desktop from './desktop.js';
 
 /** File I/O — import/export, save/load dialogs, File System Access, clipboard, drag-and-drop, auto-save, backups. */
 
@@ -85,7 +86,144 @@ export function importFromFile() {
 
 const FS_TYPES = [{ description: "Behavior Tree", accept: { "application/json": [".bt.json"] } }];
 
+// --- Desktop app: each tab can be linked to a .bt.json on disk (e.g. in a Unity project's Assets folder),
+// saved with Ctrl+S and watched for outside changes. ---
+/** Last text this editor wrote to each path, so its own saves aren't mistaken for outside changes. */
+const writtenByUs = new Map();
+/** Watched paths → stop function (null while the watch is starting). */
+const watched = new Map();
+
+/** @param {string} title */
+const slug = title => title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "") || "my-tree";
+
+/** @returns {string | null} The file the active tab is saved to (desktop app). */
+export function currentFilePath() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  return (tab && tab.path) || null;
+}
+
+/** Link the active tab to a file, or unlink it with null (it then saves via the dialog). @param {string | null} path */
+export function setCurrentFilePath(path) {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  tab.path = path || undefined;
+  if (path) watchPath(path);
+}
+
+/** @param {string} path */
+function watchPath(path) {
+  if (!Desktop.isDesktop || watched.has(path)) return;
+  watched.set(path, null);
+  Desktop.watchFile(path, () => onFileChanged(path))
+    .then(stop => watched.set(path, stop))
+    .catch(() => watched.delete(path));
+}
+
+/** @param {string} path */
+async function readTreeFile(path) {
+  const data = JSON.parse(await Desktop.readText(path));
+  const treeData = data.tree || data;
+  let layoutData = data.layout;
+  if (!layoutData) {
+    const layoutPath = Desktop.layoutPathFor(path);
+    if (await Desktop.exists(layoutPath)) {
+      try { layoutData = JSON.parse(await Desktop.readText(layoutPath)); } catch { /* no usable layout: auto-layout */ }
+    }
+  }
+  if (!treeData.nodes || treeData.root === undefined) throw new Error("not a behavior tree file");
+  return { treeData, layoutData: layoutData || { nodes: {} } };
+}
+
+/** Replace the editor's tree with file contents (no dirty check). @param {any} treeData @param {any} layoutData */
+function applyTree(treeData, layoutData) {
+  const s = Serialization.fromJSON(treeData, layoutData);
+  state.title = s.title;
+  state.description = s.description;
+  state.root = s.root;
+  state.nodes = s.nodes;
+  Canvas.notifyChanged();
+  History.clear();
+  pushHistory();
+  const hasLayout = layoutData.nodes && Object.keys(layoutData.nodes).length > 0;
+  if (!hasLayout) Canvas.autoLayout();
+  Canvas.centerView(true);
+  Canvas.triggerStaggeredSpawn(state.nodes.map(n => n.id));
+  Properties.show([]);
+}
+
+/** Someone else changed a linked file (git, another editor): reload it unless there are unsaved edits. @param {string} path */
+async function onFileChanged(path) {
+  let text;
+  try { text = await Desktop.readText(path); } catch { return; }
+  if (text === writtenByUs.get(path)) return;
+  const tab = tabs.find(t => t.path === path);
+  if (!tab) return;
+  const active = tab.id === activeTabId;
+  const name = Desktop.basename(path);
+  if (active ? dirty : tab.dirty) { toast(`${name} changed on disk — keeping your unsaved edits`); return; }
+  writtenByUs.set(path, text);
+  try {
+    const { treeData, layoutData } = await readTreeFile(path);
+    if (active) { applyTree(treeData, layoutData); setDirty(false); }
+    else { tab.tree = treeData; tab.layout = layoutData; }
+    toast(`Reloaded ${name} (changed on disk)`);
+  } catch { /* mid-write or invalid: the next change event retries */ }
+}
+
+/**
+ * Save the active tree to its .bt.json (+ .bt.layout.json sidecar). Asks for a path the first time, or always
+ * with `saveAs`. A Unity project running the tree picks the file up within a second, even in Play mode.
+ * @param {boolean} [saveAs]
+ */
+export async function saveDocument(saveAs = false) {
+  try {
+    let path = saveAs ? null : currentFilePath();
+    if (path && await Desktop.exists(path)) {
+      // Never silently overwrite a file with an unrelated tree (one that shares no node with it).
+      try {
+        const disk = await readTreeFile(path);
+        const diskIds = Object.keys(disk.treeData.nodes || {});
+        const shared = state.nodes.some(n => diskIds.includes(n.id));
+        if (diskIds.length > 0 && state.nodes.length > 0 && !shared &&
+            !confirm(`${Desktop.basename(path)} holds a different tree ("${disk.treeData.title || "untitled"}"). Overwrite it with "${state.title}"?`)) path = null;
+      } catch { /* unreadable: overwrite */ }
+    }
+    if (!path) path = await Desktop.pickSavePath(slug(state.title) + ".bt.json");
+    if (!path) return;
+    const { tree, layout } = Serialization.toJSON(state);
+    tree.title = state.title;
+    tree.description = state.description;
+    const treeText = JSON.stringify(tree, null, 2) + "\n";
+    writtenByUs.set(path, treeText);
+    await Desktop.writeTextAtomic(path, treeText);
+    await Desktop.writeTextAtomic(Desktop.layoutPathFor(path), JSON.stringify(layout, null, 2) + "\n");
+    setCurrentFilePath(path);
+    setDirty(false);
+    toast("Saved " + Desktop.basename(path));
+  } catch (e) {
+    toast("Save failed: " + (e && e.message ? e.message : e));
+  }
+}
+
+/** Native Open dialog → load the file into the active tab and link the tab to it. */
+export async function openDocument() {
+  try {
+    const path = await Desktop.pickOpenPath();
+    if (!path) return;
+    const { treeData, layoutData } = await readTreeFile(path);
+    if (dirty && !confirm("You have unsaved changes. Load anyway?")) return;
+    applyTree(treeData, layoutData);
+    writtenByUs.set(path, await Desktop.readText(path));
+    setCurrentFilePath(path);
+    setDirty(false);
+    toast("Opened " + Desktop.basename(path));
+  } catch (e) {
+    toast("Open failed: " + (e && e.message ? e.message : e));
+  }
+}
+
 async function saveToFileSystem() {
+  if (Desktop.isDesktop) return saveDocument(true);
   try {
     const handle = await window.showSaveFilePicker({ types: FS_TYPES, suggestedName: (state.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "") || "my-tree") + ".bt.json" });
     const { tree, layout } = Serialization.toJSON(state);
@@ -103,6 +241,7 @@ async function saveToFileSystem() {
 }
 
 async function openFromFileSystem() {
+  if (Desktop.isDesktop) return openDocument();
   try {
     const [handle] = await window.showOpenFilePicker({ types: FS_TYPES, multiple: false });
     const file = await handle.getFile();
@@ -233,6 +372,7 @@ export async function loadTreeByRef(dir, name) {
   Canvas.centerView(true);
   Canvas.triggerStaggeredSpawn(state.nodes.map(n => n.id));
   Properties.show([]);
+  setCurrentFilePath(null);
   setDirty(false);
   addRecent(dir, name);
   document.getElementById("load-dialog").classList.add("hidden");
@@ -462,7 +602,7 @@ function autoSave() {
     // Save all tabs
     const curTab = tabs.find(t => t.id === activeTabId);
     if (curTab) { curTab.tree = tree; curTab.layout = layout; curTab.title = state.title; curTab.dirty = dirty; }
-    const tabData = tabs.map(t => ({ title: t.title, tree: t.tree, layout: t.layout, dirty: t.dirty, active: t.id === activeTabId }));
+    const tabData = tabs.map(t => ({ title: t.title, tree: t.tree, layout: t.layout, dirty: t.dirty, active: t.id === activeTabId, path: t.path }));
     localStorage.setItem("bt-editor-tabs", JSON.stringify(tabData));
     if (dirty && state.nodes.length > 0) {
       lastAutoSaveTs = Date.now();
@@ -567,6 +707,7 @@ export function initFileIO() {
 
   // --- Save dialog ---
   document.getElementById("btn-save").addEventListener("click", () => {
+    if (Desktop.isDesktop) { saveDocument(false); return; }
     /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value = state.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "") || "my-tree";
     document.getElementById("save-dialog").classList.remove("hidden");
     setTimeout(() => /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).select(), 0);
@@ -822,7 +963,7 @@ export function initPersistence() {
         const st = savedTabs[i];
         const id = createTab(st.title || "Untitled");
         const tab = tabs.find(t => t.id === id);
-        if (tab) { tab.tree = st.tree; tab.layout = st.layout; tab.dirty = st.dirty; }
+        if (tab) { tab.tree = st.tree; tab.layout = st.layout; tab.dirty = st.dirty; tab.path = st.path; if (st.path) watchPath(st.path); }
         if (st.active) activeIdx = i;
       }
       switchTab(tabs[activeIdx].id);

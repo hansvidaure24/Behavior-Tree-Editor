@@ -10,7 +10,8 @@ import { activeTabId, closeTab, switchTab, tabAddBtn, tabs } from './tab-manager
 import { togglePalette, toggleProperties } from './toolbar.js';
 import { closeReplay, showWarningsPanel, toggleBBViewer, toggleJsonPreview, toggleOutline, updateReplayUI, warningsPanel } from './panels.js';
 import { openCmdPalette, openReplace, openSearch, showStats } from './dialogs.js';
-import { copySelectedToClipboard, copyToClipboard, exportJSON, extractSubtreeToClipboard, fileHandle, importFromFile, pasteFromClipboard } from './file-io.js';
+import { copySelectedToClipboard, copyToClipboard, exportJSON, extractSubtreeToClipboard, fileHandle, importFromFile, openDocument, pasteFromClipboard, saveDocument } from './file-io.js';
+import { isDesktop } from './desktop.js';
 
 /** Global keyboard shortcuts. */
 
@@ -592,14 +593,19 @@ export function initKeyboardShortcuts() {
       if (e.key === "z" && !e.shiftKey) { e.preventDefault(); History.undo(); }
       if (e.key === "z" && e.shiftKey) { e.preventDefault(); History.redo(); }
       if (e.key === "y") { e.preventDefault(); History.redo(); }
-      if (e.key === "s" && e.shiftKey) {
+      if (e.key === "s" && e.shiftKey && isDesktop) {
+        e.preventDefault();
+        saveDocument(true);
+      } else if (e.key === "s" && e.shiftKey) {
         e.preventDefault();
         /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).value = "";
         document.getElementById("save-dialog").classList.remove("hidden");
         setTimeout(() => /** @type {HTMLInputElement} */ (document.getElementById("save-filename")).focus(), 0);
       } else if (e.key === "s") {
         e.preventDefault();
-        if (fileHandle) {
+        if (isDesktop) {
+          saveDocument(false);
+        } else if (fileHandle) {
           // Re-save silently to the known file handle
           (async () => {
             try {
@@ -673,7 +679,7 @@ export function initKeyboardShortcuts() {
         else { copyToClipboard(); }
       }
       if (e.key === "v" && !e.shiftKey) { e.preventDefault(); pasteFromClipboard(); }
-      if (e.key === "o" && !e.shiftKey) { e.preventDefault(); importFromFile(); }
+      if (e.key === "o" && !e.shiftKey) { e.preventDefault(); if (isDesktop) openDocument(); else importFromFile(); }
       if (e.key === "o" && e.shiftKey) { e.preventDefault(); toggleOutline(); }
       if (e.key === "k" && e.shiftKey) { e.preventDefault(); toggleBBViewer(); }
       if (e.key === "i" && e.shiftKey) { e.preventDefault(); showStats(); }

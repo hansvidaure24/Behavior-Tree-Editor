@@ -35,6 +35,10 @@ namespace BehaviorTreeRuntime
         float _accumulator;
         string _lastSeenText;
         float _nextReloadCheck;
+#if UNITY_EDITOR
+        TreeFileWatcher _watcher;
+        TextAsset _watchedAsset;
+#endif
 
         public BTBindings RegisterAction(string name, Func<BTContext, NodeStatus> onTick,
             Action<BTContext> onEnter = null, Action<BTContext> onAbort = null, bool interruptible = true) =>
@@ -85,13 +89,7 @@ namespace BehaviorTreeRuntime
         protected virtual void Update()
         {
 #if UNITY_EDITOR
-            if (reloadOnChange && treeAsset != null && Tree != null && Time.realtimeSinceStartup >= _nextReloadCheck)
-            {
-                _nextReloadCheck = Time.realtimeSinceStartup + 0.5f;
-                var text = treeAsset.text;
-                if (text != _lastSeenText && LoadFromJson(text))
-                    Debug.Log($"[BT {name}] Reloaded \"{Tree.Title}\" from {treeAsset.name}.", this);
-            }
+            if (reloadOnChange && treeAsset != null && Tree != null) CheckForReload();
 #endif
             if (Tree == null) return;
             Tree.DebugLog = debugLog;
@@ -110,5 +108,26 @@ namespace BehaviorTreeRuntime
         }
 
         protected virtual void OnDisable() => Tree?.Abort();
+
+#if UNITY_EDITOR
+        // The file on disk (saved from the Behavior Tree Editor, even with Unity in the background), or the
+        // re-imported asset text when the asset has no file of its own.
+        void CheckForReload()
+        {
+            if (_watchedAsset != treeAsset)
+            {
+                _watchedAsset = treeAsset;
+                _watcher = new TreeFileWatcher(treeAsset);
+            }
+            string text = _watcher.FilePath != null ? _watcher.Poll() : null;
+            if (text == null && _watcher.FilePath == null && Time.realtimeSinceStartup >= _nextReloadCheck)
+            {
+                _nextReloadCheck = Time.realtimeSinceStartup + 0.5f;
+                text = treeAsset.text;
+            }
+            if (text != null && text != _lastSeenText && LoadFromJson(text))
+                Debug.Log($"[BT {name}] Reloaded \"{Tree.Title}\" from {treeAsset.name}.", this);
+        }
+#endif
     }
 }

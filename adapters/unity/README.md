@@ -81,8 +81,9 @@ the tree `Owner` (the runner sets its GameObject).
 - **Tick Interval** — seconds between ticks; 0 ticks every frame.
 - **Debug Log** — logs every node status change and abort, e.g.
   `[BT Gravewarden] t=4.30 action "Attack" → Running`. Clicking the line selects the agent.
-- **Reload On Change** (Editor) — when the `.bt.json` is re-imported (save from the editor, then focus Unity),
-  the tree is rebuilt in Play mode, keeping the blackboard. A file with errors is reported and the current tree
+- **Reload On Change** (Editor) — when the `.bt.json` changes on disk the tree is rebuilt in Play mode within
+  about a second, keeping the blackboard. The runtime reads the file itself (`TreeFileWatcher`), so Unity can stay in
+  the background while you save from the Behavior Tree Editor. A file with errors is reported and the current tree
   keeps running.
 
 `runner.LoadFromJson(text)` loads a tree from anywhere at runtime (StreamingAssets, a download, a mod).

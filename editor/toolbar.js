@@ -6,7 +6,7 @@ import { Canvas } from './canvas.js';
 import { Properties } from './properties.js';
 import { dirty, onChanged, pushHistory, setDirty, state, toast } from './app.js';
 import { openAI } from './dialogs.js';
-import { loadTreeByRef } from './file-io.js';
+import { loadTreeByRef, setCurrentFilePath } from './file-io.js';
 
 /** Toolbar buttons, node palette (drag/click-to-add, templates, filter), zoom controls, title editing, theme. */
 
@@ -393,6 +393,7 @@ export function initToolbar() {
     History.clear();
     pushHistory();
     Properties.show([]);
+    setCurrentFilePath(null);
     setDirty(false);
     try { localStorage.removeItem("bt-editor-autosave"); } catch {}
   });
