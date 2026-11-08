@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { NodeCategory } from './types.js' */
 /** Node type definitions and rendering config. */
 export const NodeTypes = (() => {
   const COLORS = {
@@ -67,15 +69,29 @@ export const NodeTypes = (() => {
 
   function isLight() { return document.body.classList.contains("light"); }
 
+  /**
+   * Fill/stroke/text colors for a category in the current theme.
+   * @param {NodeCategory | string} category
+   * @returns {{fill: string, stroke: string, text: string}}
+   */
   function colors(category) {
     const pal = isLight() ? COLORS_LIGHT : COLORS;
     return pal[category] || pal.leaf;
   }
 
+  /**
+   * @param {string} type
+   * @returns {NodeCategory}
+   */
   function categoryOf(type) {
     return CATEGORIES[type] || "leaf";
   }
 
+  /**
+   * How many children a node type may have (Infinity for composites, 1 for decorators, 0 for leaves).
+   * @param {string} type
+   * @returns {number}
+   */
   function maxChildren(type) {
     const cat = CATEGORIES[type];
     if (cat === "leaf") return 0;
@@ -83,10 +99,16 @@ export const NodeTypes = (() => {
     return Infinity;
   }
 
+  /** @returns {string[]} Every node type the editor supports. */
   function allTypes() {
     return Object.keys(CATEGORIES);
   }
 
+  /**
+   * Parameters a freshly created node of this type starts with.
+   * @param {string} type
+   * @returns {Record<string, any>}
+   */
   function defaultParams(type) {
     return DEFAULT_PARAMS[type] ? { ...DEFAULT_PARAMS[type] } : {};
   }
@@ -98,6 +120,11 @@ export const NodeTypes = (() => {
     "Default", "Red", "Amber", "Green", "Blue", "Purple", "Pink", "Teal", "Orange",
   ];
 
+  /**
+   * Parameter names offered as quick-add chips in the properties panel.
+   * @param {string} type
+   * @returns {string[]}
+   */
   function suggestedParams(type) { return SUGGESTED_PARAMS[type] || []; }
 
   return { COLORS, ICONS, CATEGORIES, DESCRIPTIONS, NODE_W, NODE_H, PORT_R, NODE_COLORS, NODE_COLOR_LABELS, colors, categoryOf, maxChildren, allTypes, defaultParams, suggestedParams };

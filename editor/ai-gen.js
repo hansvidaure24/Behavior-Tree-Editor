@@ -1,5 +1,7 @@
+// @ts-check
 import { Serialization } from './serialization.js';
 import { Storage } from './storage.js';
+import Fuse from './fuse.esm.js';
 
 /** AI-assisted tree generation — fuzzy search over saved templates + built-in patterns. */
 export const AIGen = (() => {
@@ -78,8 +80,8 @@ export const AIGen = (() => {
       nodeText: _nodeText(t.tree),
       data: t.tree,
     }));
-    if (typeof globalThis.Fuse !== "undefined") {
-      _index = new globalThis.Fuse(_templates, {
+    if (typeof Fuse !== "undefined") {
+      _index = new Fuse(_templates, {
         keys: [
           { name: "title", weight: 3 },
           { name: "description", weight: 2 },
@@ -93,6 +95,10 @@ export const AIGen = (() => {
     }
   }
 
+  /**
+   * Index the bundled examples for fuzzy search.
+   * @returns {Promise<void>}
+   */
   async function loadTemplates() {
     try {
       const list = await Storage.listTrees();
@@ -192,6 +198,11 @@ export const AIGen = (() => {
 
   // --- Main generate ---
 
+  /**
+   * Build a tree from a plain-English description using fuzzy template search, then built-in patterns.
+   * @param {string} description
+   * @returns {{root: string, nodes: Object[], _source?: string, _matches?: string[]} | null} Editor-style tree: nodes as an array, without positions.
+   */
   function generate(description) {
     // Try fuzzy template search first
     const results = _fuseSearch(description);
@@ -226,6 +237,7 @@ export const AIGen = (() => {
     return { root: root.id, nodes: allNodes, _source: "patterns" };
   }
 
+  /** @returns {string[]} Example prompts for the AI dialog. */
   function getHints() {
     return [
       "patrol and attack enemies",

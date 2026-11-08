@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { SerializedTree, SerializedLayout } from './types.js' */
 /** Undo/redo stack — stores JSON snapshots of the full editor state. */
 export const History = (() => {
   const stack = [];
@@ -21,8 +23,13 @@ export const History = (() => {
   }
 
   return {
+    /** @param {(snapshot: {tree: SerializedTree, layout: SerializedLayout}, msg: string) => void} cb Called with the restored snapshot after undo/redo/jump. */
     init(cb) { onChange = cb; },
 
+    /**
+     * Record a snapshot (no-op if identical to the current one). Keeps the last 100.
+     * @param {{tree: SerializedTree, layout: SerializedLayout}} state
+     */
     push(state) {
       const s = snapshot(state);
       if (index >= 0 && stack[index] === s) return;
@@ -35,6 +42,7 @@ export const History = (() => {
       }
     },
 
+    /** @returns {{tree: SerializedTree, layout: SerializedLayout} | null} The restored snapshot, or null at the start of history. */
     undo() {
       if (index <= 0) return null;
       const summary = diffSummary(stack[index - 1], stack[index]);
@@ -44,6 +52,7 @@ export const History = (() => {
       return s;
     },
 
+    /** @returns {{tree: SerializedTree, layout: SerializedLayout} | null} */
     redo() {
       if (index >= stack.length - 1) return null;
       const summary = diffSummary(stack[index], stack[index + 1]);
@@ -53,11 +62,20 @@ export const History = (() => {
       return s;
     },
 
+    /** @returns {boolean} */
     canUndo() { return index > 0; },
+    /** @returns {boolean} */
     canRedo() { return index < stack.length - 1; },
+    /** @returns {number} */
     getUndoCount() { return index; },
+    /** @returns {number} */
     getRedoCount() { return stack.length - 1 - index; },
+    /** @returns {number} */
     getIndex() { return index; },
+    /**
+     * One entry per snapshot, for the undo-history panel.
+     * @returns {{index: number, summary: string, current: boolean}[]}
+     */
     getEntries() {
       const entries = [];
       for (let i = 0; i < stack.length; i++) {
@@ -66,6 +84,10 @@ export const History = (() => {
       }
       return entries;
     },
+    /**
+     * @param {number} targetIndex
+     * @returns {{tree: SerializedTree, layout: SerializedLayout} | null}
+     */
     jumpTo(targetIndex) {
       if (targetIndex < 0 || targetIndex >= stack.length) return null;
       index = targetIndex;
@@ -73,6 +95,7 @@ export const History = (() => {
       if (onChange) onChange(s, "Jump to step " + targetIndex);
       return s;
     },
+    /** Drop all snapshots (used when switching tabs). */
     clear() { stack.length = 0; index = -1; },
   };
 })();

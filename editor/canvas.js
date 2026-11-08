@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { TreeState, BTNode, SerializedTree, SerializedLayout } from './types.js' */
 import { NodeTypes } from './nodes.js';
 import { Serialization } from './serialization.js';
 import { Replay } from './replay.js';
@@ -51,6 +53,7 @@ export const Canvas = (() => {
   let onSelect = null;
   let onContextMenu = null;
   let onConnectionContextMenu = null;
+  /** @type {(msg: string) => void} */
   let onRejectReason = () => {};
   let onCanvasContextMenu = null;
   let onConnectEmpty = null;
@@ -62,6 +65,12 @@ export const Canvas = (() => {
     for (const n of state.nodes) nodeById[n.id] = n;
   }
 
+  /**
+   * @param {HTMLCanvasElement} canvas
+   * @param {HTMLCanvasElement} minimap
+   * @param {TreeState} editorState
+   * @param {Object} callbacks onChanged, onSelect, onContextMenu, onRejectReason, onConnectionContextMenu, onCanvasContextMenu, onConnectEmpty
+   */
   function init(canvas, minimap, editorState, callbacks) {
     cvs = canvas;
     ctx = cvs.getContext("2d");
@@ -2116,8 +2125,13 @@ export const Canvas = (() => {
     return node.children;
   }
 
+  /**
+   * @param {string} id
+   * @returns {boolean}
+   */
   function isCollapsed(id) { return collapsedIds.has(id); }
 
+  /** @param {string} id */
   function selectSubtree(id) {
     const visited = new Set();
     function collect(nid) {
@@ -2170,6 +2184,7 @@ export const Canvas = (() => {
     if (onChanged) onChanged();
   }
 
+  /** Tidy-tree layout of every node, rooted at state.root. */
   function autoLayout() {
     if (state.nodes.length === 0) return;
     rebuildLookup();
@@ -2237,12 +2252,21 @@ export const Canvas = (() => {
     layoutAnim = { before, after, start: performance.now(), dur: 300 };
   }
 
+  /** @returns {string[]} */
   function getSelectedIds() { return [...selectedIds]; }
+  /** @param {string[]} ids */
   function setSelectedIds(ids) { selectedIds = new Set(ids); if (onSelect) onSelect([...selectedIds]); }
+  /** @returns {TreeState} */
   function getState() { return state; }
+  /** @param {TreeState} s */
   function setState(s) { state = s; rebuildLookup(); }
+  /** Rebuild lookup tables and redraw after state was mutated. */
   function notifyChanged() { rebuildLookup(); }
 
+  /**
+   * Fit the whole tree in view.
+   * @param {boolean} [animated]
+   */
   function centerView(animated) {
     if (state.nodes.length === 0) {
       if (animated) {
@@ -2292,14 +2316,18 @@ export const Canvas = (() => {
     if (onChanged) onChanged();
   }
 
+  /** @returns {boolean} New snap-to-grid setting. */
   function toggleSnap() { snapToGrid = !snapToGrid; return snapToGrid; }
+  /** @returns {boolean} */
   function isSnapping() { return snapToGrid; }
 
+  /** @param {string} id */
   function toggleCollapse(id) {
     if (collapsedIds.has(id)) collapsedIds.delete(id);
     else collapsedIds.add(id);
   }
 
+  /** @returns {string | null} PNG data URL, or null for an empty tree. */
   function exportPNG() {
     if (state.nodes.length === 0) return null;
     const nw = NodeTypes.NODE_W, nh = NodeTypes.NODE_H;
@@ -2398,12 +2426,14 @@ export const Canvas = (() => {
     return offCvs.toDataURL("image/png");
   }
 
+  /** @returns {Promise<Blob | null>} */
   function exportPNGBlob() {
     const dataUrl = exportPNG();
     if (!dataUrl) return Promise.resolve(null);
     return fetch(dataUrl).then(r => r.blob());
   }
 
+  /** @returns {string | null} SVG markup, or null for an empty tree. */
   function exportSVG() {
     if (state.nodes.length === 0) return null;
     const nw = NodeTypes.NODE_W, nh = NodeTypes.NODE_H;
@@ -2500,6 +2530,12 @@ export const Canvas = (() => {
     return svg;
   }
 
+  /**
+   * @param {string} type
+   * @param {number} wx
+   * @param {number} wy
+   * @returns {BTNode}
+   */
   function addNodeAt(type, wx, wy) {
     const node = {
       id: Serialization.uid(),
@@ -2524,6 +2560,7 @@ export const Canvas = (() => {
     return node;
   }
 
+  /** @param {string} type */
   function addNodeAtCenter(type) {
     let wx = (W / 2 - camX) / zoom - NodeTypes.NODE_W / 2;
     let wy = (H / 2 - camY) / zoom - NodeTypes.NODE_H / 2;
@@ -2567,6 +2604,7 @@ export const Canvas = (() => {
     if (onChanged) onChanged();
   }
 
+  /** @param {number} factor >1 zooms in. */
   function zoomBy(factor) {
     const newZoom = Math.max(0.15, Math.min(4, zoom * factor));
     targetCamX = W / 2 - (W / 2 - camX) * (newZoom / zoom);
@@ -2601,6 +2639,7 @@ export const Canvas = (() => {
     animating = true;
   }
 
+  /** @param {string} mode "left" | "right" | "center-h" | "top" | "bottom" | "center-v" | "distribute-h" | "distribute-v" */
   function alignSelected(mode) {
     const ids = [...selectedIds];
     if (ids.length < 2) return;
@@ -2639,6 +2678,10 @@ export const Canvas = (() => {
     if (onChanged) onChanged();
   }
 
+  /**
+   * Pan to a node and select it.
+   * @param {string} id
+   */
   function focusNode(id) {
     const n = nodeById[id];
     if (!n) return;
@@ -2652,6 +2695,10 @@ export const Canvas = (() => {
     if (onSelect) onSelect([id]);
   }
 
+  /**
+   * @param {string} id
+   * @returns {{tree: SerializedTree, layout: SerializedLayout, ids: Set<string>}}
+   */
   function extractSubtree(id) {
     const visited = new Set();
     function collect(nid) {
@@ -2675,6 +2722,7 @@ export const Canvas = (() => {
     return { tree, layout, ids: visited };
   }
 
+  /** @param {string} id */
   function copySubtreeOf(id) {
     const visited = new Set();
     function collect(nid) {
@@ -2702,6 +2750,7 @@ export const Canvas = (() => {
     if (onChanged) onChanged();
   }
 
+  /** @param {string} rootId */
   function zoomToSubtree(rootId) {
     const ids = new Set();
     function collect(id) { if (ids.has(id)) return; ids.add(id); const n = nodeById[id]; if (n) for (const c of n.children) collect(c); }
@@ -2721,8 +2770,17 @@ export const Canvas = (() => {
     animating = true;
   }
 
+  /**
+   * Dim every node not in `ids` (null clears the filter).
+   * @param {Set<string> | null} ids
+   */
   function setSearchFilter(ids) { searchMatchIds = ids; }
 
+  /**
+   * Start a keyboard-driven connection from this node.
+   * @param {string} fromId
+   * @returns {boolean} false if the node can't take more children.
+   */
   function enterConnectMode(fromId) {
     const n = nodeById[fromId];
     if (!n || NodeTypes.maxChildren(n.type) === 0) return false;
@@ -2732,17 +2790,23 @@ export const Canvas = (() => {
     return true;
   }
 
+  /** @returns {boolean} true if a connect/reparent mode was active. */
   function cancelConnectMode() {
     if (connectMode) { connectMode = null; cvs.style.cursor = "default"; return true; }
     if (reparentMode) { reparentMode = null; cvs.style.cursor = "default"; return true; }
     return false;
   }
 
+  /** @param {string} childId */
   function enterReparentMode(childId) {
     reparentMode = { childId };
     cvs.style.cursor = "crosshair";
   }
 
+  /**
+   * @param {number} dx
+   * @param {number} dy
+   */
   function nudgeSelected(dx, dy) {
     if (positionLocked) { if (onRejectReason) onRejectReason("Locked — Shift+L to unlock"); return; }
     if (selectedIds.size === 0) return;
@@ -2760,29 +2824,57 @@ export const Canvas = (() => {
     zoomToSelection, zoomBy, focusRoot, addNodeAtCenter, alignSelected, exportPNG, exportPNGBlob, selectSubtree,
     copySubtreeOf, extractSubtree, exportSVG, addNodeAt, setSearchFilter, zoomToSubtree,
     enterConnectMode, cancelConnectMode, enterReparentMode, nudgeSelected,
+    /**
+     * Play the spawn animation on these nodes.
+     * @param {string[]} ids
+     */
     triggerSpawn(ids) { const now = performance.now(); for (const id of ids) spawnAnims.set(id, now); },
+    /** @param {string[]} ids */
     triggerStaggeredSpawn(ids) { const now = performance.now(); for (let i = 0; i < ids.length; i++) spawnAnims.set(ids[i], now + i * 30); },
+    /** @returns {boolean} */
     toggleLock() { positionLocked = !positionLocked; return positionLocked; },
+    /** @returns {boolean} */
     isLocked() { return positionLocked; },
+    /** @returns {string} "bezier" | "straight" | "step" */
     cycleConnectionStyle() {
       const styles = ["bezier", "straight", "step"];
       connectionStyle = styles[(styles.indexOf(connectionStyle) + 1) % styles.length];
       return connectionStyle;
     },
+    /** @returns {string} */
     getConnectionStyle() { return connectionStyle; },
+    /** @returns {boolean} */
     toggleExecOrder() { showExecOrder = !showExecOrder; return showExecOrder; },
+    /** @returns {boolean} */
     isExecOrder() { return showExecOrder; },
+    /** @returns {boolean} */
     toggleHeatmap() { replayHeatmap = !replayHeatmap; return replayHeatmap; },
+    /** @returns {boolean} */
     toggleFlowDots() { showFlowDots = !showFlowDots; return showFlowDots; },
+    /**
+     * @param {string} id
+     * @returns {boolean} Whether the node is now bookmarked.
+     */
     toggleBookmark(id) { if (bookmarks.has(id)) bookmarks.delete(id); else bookmarks.add(id); return bookmarks.has(id); },
+    /** @returns {string[]} */
     getBookmarks() { return [...bookmarks]; },
+    /**
+     * @param {string} id
+     * @returns {boolean}
+     */
     isBookmarked(id) { return bookmarks.has(id); },
+    /** @param {string} id */
     isolateSubtree(id) { isolatedSubtree = id; },
     exitIsolation() { isolatedSubtree = null; },
+    /** @returns {boolean} */
     isIsolated() { return !!isolatedSubtree; },
+    /** @returns {string | null} */
     getIsolatedRoot() { return isolatedSubtree; },
+    /** @returns {number} */
     getZoom() { return zoom; },
+    /** @param {number} z */
     setZoom(z) { targetZoom = Math.max(0.1, Math.min(5, z)); targetCamX = W / 2 - (W / 2 - camX) * (targetZoom / zoom); targetCamY = H / 2 - (H / 2 - camY) * (targetZoom / zoom); animating = true; },
+    /** @param {(zoom: number) => void} fn */
     setOnZoomChange(fn) { onZoomChange = fn; },
   };
 })();

@@ -1,89 +1,133 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BehaviorTreeRuntime
 {
+    /// <summary>
+    /// Runs a .bt.json tree on a GameObject. Register game code on <see cref="Bindings"/> (any time before the
+    /// nodes first run — Awake or Start of another component is fine), then the runner ticks the tree.
+    /// In the Editor it rebuilds the tree whenever the .bt.json asset changes, keeping the blackboard,
+    /// so saving from the Behavior Tree Editor updates a playing scene.
+    /// </summary>
+    [AddComponentMenu("Behavior Tree/Behavior Tree Runner")]
     public class BehaviorTreeRunner : MonoBehaviour
     {
-        [Tooltip("Drag your .bt.json TextAsset here")]
-        public TextAsset jsonAsset;
+        [Tooltip("The .bt.json exported from the Behavior Tree Editor.")]
+        public TextAsset treeAsset;
 
-        public Blackboard Bb { get; private set; } = new();
-        public BTNode Root { get; private set; }
-        public string TreeTitle { get; private set; } = "";
+        [Tooltip("Seconds between ticks. 0 = tick every frame.")]
+        [Min(0f)] public float tickInterval;
 
-        readonly Dictionary<string, Func<Blackboard, NodeStatus>> _actions = new();
-        readonly Dictionary<string, Func<Blackboard, bool>> _conditions = new();
+        [Tooltip("Log every node status change to the Console.")]
+        public bool debugLog;
 
-        public void RegisterAction(string name, Func<Blackboard, NodeStatus> fn) => _actions[name] = fn;
-        public void RegisterCondition(string name, Func<Blackboard, bool> fn) => _conditions[name] = fn;
+        [Tooltip("Editor only: rebuild the tree when the .bt.json asset is re-imported.")]
+        public bool reloadOnChange = true;
 
-        void Start()
+        public BTBindings Bindings { get; } = new BTBindings();
+        public Blackboard Blackboard { get; } = new Blackboard();
+        public BehaviorTree Tree { get; private set; }
+        public string TreeTitle => Tree != null ? Tree.Title : "";
+
+        /// <summary>Raised whenever a tree is (re)built — first load and every hot reload.</summary>
+        public event Action<BehaviorTree> TreeLoaded;
+
+        float _accumulator;
+        string _lastSeenText;
+        float _nextReloadCheck;
+#if UNITY_EDITOR
+        TreeFileWatcher _watcher;
+        TextAsset _watchedAsset;
+#endif
+
+        public BTBindings RegisterAction(string name, Func<BTContext, NodeStatus> onTick,
+            Action<BTContext> onEnter = null, Action<BTContext> onAbort = null, bool interruptible = true) =>
+            Bindings.RegisterAction(name, onTick, onEnter, onAbort, interruptible);
+
+        public BTBindings RegisterCondition(string name, Func<BTContext, bool> check) => Bindings.RegisterCondition(name, check);
+
+        protected virtual void Start()
         {
-            if (jsonAsset == null) { Debug.LogError("BehaviorTreeRunner: no jsonAsset assigned"); return; }
-            Root = LoadFromJson(jsonAsset.text);
+            if (Tree == null && treeAsset != null) LoadFromJson(treeAsset.text);
+            else if (Tree == null) Debug.LogWarning($"[BT {name}] No tree asset assigned.", this);
         }
 
-        void Update()
+        /// <summary>
+        /// Build a tree from JSON text and swap it in (the old tree is aborted first). On failure the error is
+        /// logged and the current tree keeps running.
+        /// </summary>
+        public bool LoadFromJson(string json)
         {
-            Root?.Tick(Bb);
-        }
-
-        BTNode LoadFromJson(string json)
-        {
-            var parsed = MiniJson.Deserialize(json) as Dictionary<string, object>;
-            if (parsed == null) { Debug.LogError("Failed to parse tree JSON"); return null; }
-
-            TreeTitle = parsed.ContainsKey("title") ? parsed["title"] as string ?? "" : "";
-            var rootId = parsed["root"] as string;
-            var nodesDict = parsed["nodes"] as Dictionary<string, object>;
-
-            var built = new Dictionary<string, BTNode>();
-
-            foreach (var kv in nodesDict)
+            _lastSeenText = json;
+            BehaviorTree next;
+            try
             {
-                var nd = kv.Value as Dictionary<string, object>;
-                var type = nd["type"] as string;
-                var name = nd.ContainsKey("name") ? nd["name"] as string : type;
-                var parameters = nd.ContainsKey("parameters") ? nd["parameters"] as Dictionary<string, object> : new();
-
-                BTNode node = type switch
-                {
-                    "sequence" => new Sequence(),
-                    "selector" => new Selector(),
-                    "parallel" => new Parallel(),
-                    "invert" => new Invert(),
-                    "repeat" => new Repeat(),
-                    "cooldown" => new Cooldown(),
-                    "timeout" => new Timeout(),
-                    "guard" => new Guard { Condition = _conditions.GetValueOrDefault(name) },
-                    "action" => new ActionNode { Execute = _actions.GetValueOrDefault(name) },
-                    "condition" => new ConditionNode { Check = _conditions.GetValueOrDefault(name) },
-                    _ => new ActionNode(),
-                };
-                node.Id = kv.Key;
-                node.Name = name;
-                if (parameters != null)
-                    foreach (var p in parameters)
-                        node.Parameters[p.Key] = p.Value;
-                built[kv.Key] = node;
+                next = BehaviorTree.FromJson(json, Bindings, Blackboard);
             }
-
-            foreach (var kv in nodesDict)
+            catch (BehaviorTreeLoadException e)
             {
-                var nd = kv.Value as Dictionary<string, object>;
-                if (nd.ContainsKey("children") && nd["children"] is List<object> children)
-                {
-                    foreach (var cid in children)
-                    {
-                        if (built.TryGetValue(cid as string, out var child))
-                            built[kv.Key].Children.Add(child);
-                    }
-                }
+                Debug.LogError($"[BT {name}] Could not load tree: {e.Message}", this);
+                return false;
             }
-
-            return built.GetValueOrDefault(rootId);
+            Tree?.Abort();
+            next.Owner = gameObject;
+            next.DebugName = name;
+            next.DebugContext = this;
+            next.DebugLog = debugLog;
+            Tree = next;
+            _accumulator = 0f;
+            TreeLoaded?.Invoke(Tree);
+            return true;
         }
+
+        /// <summary>Rebuild from <see cref="treeAsset"/>.</summary>
+        public bool Reload() => treeAsset != null && LoadFromJson(treeAsset.text);
+
+        /// <summary>Tick once now, outside the normal schedule (debug stepping, tests).</summary>
+        public NodeStatus TickNow(float deltaTime) => Tree != null ? Tree.Tick(deltaTime) : NodeStatus.Failure;
+
+        protected virtual void Update()
+        {
+#if UNITY_EDITOR
+            if (reloadOnChange && treeAsset != null && Tree != null) CheckForReload();
+#endif
+            if (Tree == null) return;
+            Tree.DebugLog = debugLog;
+            if (tickInterval <= 0f)
+            {
+                Tree.Tick(Time.deltaTime);
+                return;
+            }
+            _accumulator += Time.deltaTime;
+            for (int i = 0; i < 4 && _accumulator >= tickInterval; i++)
+            {
+                _accumulator -= tickInterval;
+                Tree.Tick(tickInterval);
+            }
+            if (_accumulator > tickInterval) _accumulator = 0f; // don't spiral after a hitch
+        }
+
+        protected virtual void OnDisable() => Tree?.Abort();
+
+#if UNITY_EDITOR
+        // The file on disk (saved from the Behavior Tree Editor, even with Unity in the background), or the
+        // re-imported asset text when the asset has no file of its own.
+        void CheckForReload()
+        {
+            if (_watchedAsset != treeAsset)
+            {
+                _watchedAsset = treeAsset;
+                _watcher = new TreeFileWatcher(treeAsset);
+            }
+            string text = _watcher.FilePath != null ? _watcher.Poll() : null;
+            if (text == null && _watcher.FilePath == null && Time.realtimeSinceStartup >= _nextReloadCheck)
+            {
+                _nextReloadCheck = Time.realtimeSinceStartup + 0.5f;
+                text = treeAsset.text;
+            }
+            if (text != null && text != _lastSeenText && LoadFromJson(text))
+                Debug.Log($"[BT {name}] Reloaded \"{Tree.Title}\" from {treeAsset.name}.", this);
+        }
+#endif
     }
 }

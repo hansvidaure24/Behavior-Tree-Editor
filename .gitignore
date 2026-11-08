@@ -4,3 +4,5 @@ __pycache__/
 trees/
 .DS_Store
 CLAUDE.md
+node_modules/
+dist/

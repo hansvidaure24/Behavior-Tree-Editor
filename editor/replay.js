@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { ReplayData, ReplayFrame, TickStatus } from './types.js' */
 /** Replay debugger — loads tick recordings and visualizes execution on the tree. */
 export const Replay = (() => {
   let data = null;       // full replay JSON
@@ -14,6 +16,7 @@ export const Replay = (() => {
     skipped: "#555555",
   };
 
+  /** @param {ReplayData} replayData */
   function load(replayData) {
     data = replayData;
     currentTick = 0;
@@ -32,33 +35,49 @@ export const Replay = (() => {
     if (onTickChange) onTickChange();
   }
 
+  /** @returns {boolean} */
   function isActive() { return data !== null; }
+  /** @returns {boolean} */
   function isPlaying() { return playing; }
+  /** @returns {number} */
   function getTickCount() { return data ? data.ticks.length : 0; }
+  /** @returns {number} */
   function getCurrentTick() { return currentTick; }
+  /** @returns {ReplayData | null} */
   function getData() { return data; }
 
+  /** @returns {ReplayFrame | null} */
   function getCurrentFrame() {
     if (!data || currentTick >= data.ticks.length) return null;
     return data.ticks[currentTick];
   }
 
+  /**
+   * @param {string} nodeId
+   * @returns {TickStatus | null} null when the node wasn't visited this tick.
+   */
   function getNodeStatus(nodeId) {
     const frame = getCurrentFrame();
     if (!frame || !frame.nodes[nodeId]) return null;
     return frame.nodes[nodeId].status;
   }
 
+  /**
+   * @param {string} nodeId
+   * @returns {string | null} CSS color for the node's current status.
+   */
   function getStatusColor(nodeId) {
     const status = getNodeStatus(nodeId);
     return status ? STATUS_COLORS[status] || null : null;
   }
 
+  /** @returns {Record<string, any>} Blackboard snapshot at the current tick. */
   function getBlackboard() {
     const frame = getCurrentFrame();
     return frame ? frame.blackboard || {} : {};
   }
 
+  /** @param {number} t */
   function setTick(t) {
     if (!data) return;
     currentTick = Math.max(0, Math.min(t, data.ticks.length - 1));
@@ -103,16 +122,24 @@ export const Replay = (() => {
     playInterval = null;
   }
 
+  /** @param {number} s Ticks advanced per animation frame. */
   function setSpeed(s) {
     speed = s;
     if (playing) { pause(); play(); }
   }
 
+  /** @param {() => void} cb Called whenever the current tick or loaded data changes. */
   function init(cb) {
     onTickChange = cb;
   }
 
   // Find when a specific node changed status (for "why did it change?")
+  /**
+   * Next tick (searching in `direction`) where this node's status differs from now.
+   * @param {string} nodeId
+   * @param {1 | -1} direction
+   * @returns {number}
+   */
   function findStatusChange(nodeId, direction) {
     if (!data) return currentTick;
     const currentStatus = getNodeStatus(nodeId);
@@ -126,6 +153,7 @@ export const Replay = (() => {
     return currentTick;
   }
 
+  /** @returns {Record<string, number>} Visit frequency per node id, normalized to 0..1. */
   function getHeatmap() {
     if (!data) return {};
     const counts = {};
@@ -143,6 +171,10 @@ export const Replay = (() => {
     return heat;
   }
 
+  /**
+   * @param {string} nodeId
+   * @returns {(TickStatus | null)[]} Status at every tick.
+   */
   function getNodeTimeline(nodeId) {
     if (!data) return [];
     return data.ticks.map(t => t.nodes[nodeId]?.status || null);

@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "title": "Chanter",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n4"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3"],
+      "parameters": {}
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 2}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Chant Strike"
+    },
+    "n4": {
+      "id": "n4",
+      "type": "action",
+      "category": "leaf",
+      "name": "Hold Position",
+      "children": [],
+      "parameters": {"seconds": 0.5},
+      "comment": "Chant (each one widens the field)"
+    }
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "title": "Gravewarden",
+  "description": "Hold Steadfast mob: a Hollowed knight with a halberd. Swings when a player is within 3 m, lunges at one who stands still, holds a chokepoint while the squad is near it, and otherwise walks in slowly. Runs in-game through EnemyBrain (Assets/Plugins/BehaviorTreeRuntime).",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Gravewarden",
+      "children": [
+        "n1",
+        "n5",
+        "n10",
+        "n14"
+      ],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Halberd Swing",
+      "children": [
+        "n2",
+        "n3",
+        "n4"
+      ],
+      "parameters": {}
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {
+        "max_range": 3
+      }
+    },
+    "n3": {
+      "id": "n3",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {
+        "attack": 0
+      },
+      "comment": "Halberd Swing"
+    },
+    "n5": {
+      "id": "n5",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Charged Lunge",
+      "children": [
+        "n6",
+        "n7",
+        "n8",
+        "n9"
+      ],
+      "parameters": {}
+    },
+    "n6": {
+      "id": "n6",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {
+        "max_range": 5
+      }
+    },
+    "n7": {
+      "id": "n7",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player Stationary",
+      "children": [],
+      "parameters": {
+        "seconds": 1.2
+      }
+    },
+    "n8": {
+      "id": "n8",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n9": {
+      "id": "n9",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {
+        "attack": 1
+      },
+      "comment": "Charged Lunge: punishes a player who stands still for 1.2 s within 5 m."
+    },
+    "n10": {
+      "id": "n10",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Hold the Choke",
+      "children": [
+        "n11",
+        "n12",
+        "n13"
+      ],
+      "parameters": {},
+      "comment": "Hold a choke only while the squad is near it (bot runs, 2026-10-28: on a Watchtower approach nobody came, and it held 35 m out until the wave timed out)"
+    },
+    "n11": {
+      "id": "n11",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {
+        "query": "IsNearChoke"
+      }
+    },
+    "n12": {
+      "id": "n12",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {
+        "max_range": 12
+      }
+    },
+    "n13": {
+      "id": "n13",
+      "type": "action",
+      "category": "leaf",
+      "name": "Hold Position",
+      "children": [],
+      "parameters": {}
+    },
+    "n14": {
+      "id": "n14",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {
+        "stop_distance": 2.5,
+        "speed": 0.6
+      },
+      "comment": "Slow approach (60% speed) all the way to 2.5 m: the Gravewarden is the horde's blocker."
+    }
+  }
+}

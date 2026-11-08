@@ -1,0 +1,114 @@
+{
+  "version": "1.0",
+  "title": "Rotcaller",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n4", "n9", "n12"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n2", "n3"],
+      "parameters": {}
+    },
+    "n2": {
+      "id": "n2",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 5}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "action",
+      "category": "leaf",
+      "name": "Flee From Threat",
+      "children": [],
+      "parameters": {"distance": 8},
+      "comment": "Retreat"
+    },
+    "n4": {
+      "id": "n4",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n5", "n6", "n7", "n8"],
+      "parameters": {}
+    },
+    "n5": {
+      "id": "n5",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Line Of Sight",
+      "children": [],
+      "parameters": {}
+    },
+    "n6": {
+      "id": "n6",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 18}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n8": {
+      "id": "n8",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Corruption Lob"
+    },
+    "n9": {
+      "id": "n9",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n10", "n11"],
+      "parameters": {}
+    },
+    "n10": {
+      "id": "n10",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "CanFindHigherGround"}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Tactical Point",
+      "children": [],
+      "parameters": {"point": "HigherGround"}
+    },
+    "n12": {
+      "id": "n12",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Engagement Range",
+      "children": [],
+      "parameters": {"distance": 12}
+    }
+  }
+}

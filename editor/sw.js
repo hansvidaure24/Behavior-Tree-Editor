@@ -1,5 +1,5 @@
 // ponytail: bump CACHE_VERSION on deploy; automate with `sed -i` in deploy script if needed
-const CACHE_VERSION = 95;
+const CACHE_VERSION = 97;
 const CACHE = `bt-editor-v${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -11,7 +11,7 @@ const ASSETS = [
   "./replay.js",
   "./canvas.js",
   "./properties.js",
-  "./fuse.min.js",
+  "./fuse.esm.js",
   "./ai-gen.js",
   "./validation.js",
   "./context-menus.js",

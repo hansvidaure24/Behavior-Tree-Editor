@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { SerializedTree, SerializedLayout, ReplayData } from './types.js' */
 /** Local-first storage — File System Access API + IndexedDB + bundled examples. No server needed. */
 export const Storage = (() => {
   const DB_NAME = "bt-editor";
@@ -36,7 +38,7 @@ export const Storage = (() => {
   }
 
   function _idbPut(store, val) {
-    return new Promise((resolve, reject) => {
+    return new Promise(/** @param {(v?: any) => void} resolve */ (resolve, reject) => {
       const req = _tx(store, "readwrite").put(val);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
@@ -44,7 +46,7 @@ export const Storage = (() => {
   }
 
   function _idbDelete(store, key) {
-    return new Promise((resolve, reject) => {
+    return new Promise(/** @param {(v?: any) => void} resolve */ (resolve, reject) => {
       const req = _tx(store, "readwrite").delete(key);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
@@ -76,6 +78,10 @@ export const Storage = (() => {
 
   // --- Directory handle persistence ---
 
+  /**
+   * Ask for a project folder (File System Access API).
+   * @returns {Promise<FileSystemDirectoryHandle | null>} null if unsupported or cancelled.
+   */
   async function openDirectory() {
     if (!("showDirectoryPicker" in window)) return null;
     try {
@@ -85,10 +91,12 @@ export const Storage = (() => {
     } catch { return null; }
   }
 
+  /** @returns {string | null} */
   function getDirectoryName() {
     return _dirHandle ? _dirHandle.name : null;
   }
 
+  /** @returns {boolean} */
   function hasDirectory() { return _dirHandle !== null; }
 
   async function _writeToDirHandle(filename, data) {
@@ -171,11 +179,19 @@ export const Storage = (() => {
 
   // --- Public API ---
 
+  /**
+   * Open the IndexedDB database.
+   * @returns {Promise<void>}
+   */
   async function init() {
     await _openDB();
     await _loadExamples();
   }
 
+  /**
+   * Bundled examples, IndexedDB saves and (if a folder is open) .bt.json files on disk.
+   * @returns {Promise<{name: string, dir: string, nodeCount?: number}[]>}
+   */
   async function listTrees() {
     const results = [];
     const examples = await _loadExamples();
@@ -193,6 +209,11 @@ export const Storage = (() => {
     return results;
   }
 
+  /**
+   * @param {string} dir "examples", "folder" (open project folder) or anything else for IndexedDB saves
+   * @param {string} name
+   * @returns {Promise<{tree: SerializedTree, layout: SerializedLayout} | null>}
+   */
   async function loadTree(dir, name) {
     if (dir === "examples") {
       const examples = await _loadExamples();
@@ -206,6 +227,13 @@ export const Storage = (() => {
     return null;
   }
 
+  /**
+   * Save to IndexedDB (and the open folder, if any), keeping a version entry.
+   * @param {string} name
+   * @param {SerializedTree} tree
+   * @param {SerializedLayout} layout
+   * @returns {Promise<void>}
+   */
   async function saveTree(name, tree, layout) {
     // Version the old one first
     const existing = await _idbGet(TREES_STORE, name);
@@ -218,6 +246,10 @@ export const Storage = (() => {
     await _writeToDirHandle(name, { tree, layout });
   }
 
+  /**
+   * @param {string} name
+   * @returns {Promise<void>}
+   */
   async function deleteTree(name) {
     await _idbDelete(TREES_STORE, name);
     await _deleteFromDirHandle(name);
@@ -231,6 +263,10 @@ export const Storage = (() => {
     }
   }
 
+  /**
+   * @param {string} name
+   * @returns {Promise<{timestamp: number, nodeCount: number, _ts: number}[]>} Newest first.
+   */
   async function listVersions(name) {
     const all = await _idbGetAll(VERSIONS_STORE);
     return all.filter(v => v.name === name)
@@ -238,6 +274,11 @@ export const Storage = (() => {
       .map(v => ({ timestamp: Math.floor(v.ts / 1000), nodeCount: Object.keys((v.tree || {}).nodes || {}).length, _ts: v.ts }));
   }
 
+  /**
+   * @param {string} name
+   * @param {number} timestamp Seconds, as returned by listVersions.
+   * @returns {Promise<{tree: SerializedTree, layout: SerializedLayout} | null>}
+   */
   async function loadVersion(name, timestamp) {
     const all = await _idbGetAll(VERSIONS_STORE);
     const match = all.find(v => v.name === name && Math.floor(v.ts / 1000) === timestamp);
@@ -245,6 +286,7 @@ export const Storage = (() => {
     return null;
   }
 
+  /** @returns {Promise<{name: string, dir: string}[]>} */
   async function listReplays() {
     const results = [];
     const examples = await _loadExamples();
@@ -258,6 +300,11 @@ export const Storage = (() => {
     return results;
   }
 
+  /**
+   * @param {string} dir
+   * @param {string} name
+   * @returns {Promise<ReplayData | null>}
+   */
   async function loadReplay(dir, name) {
     if (dir === "examples") {
       const examples = await _loadExamples();

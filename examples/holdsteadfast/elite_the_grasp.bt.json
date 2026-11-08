@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "title": "The Grasp",
+  "description": "",
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "type": "selector",
+      "category": "composite",
+      "name": "Selector",
+      "children": ["n1", "n6", "n9", "n13", "n16"],
+      "parameters": {}
+    },
+    "n1": {
+      "id": "n1",
+      "type": "cooldown",
+      "category": "decorator",
+      "name": "Cooldown",
+      "children": ["n2"],
+      "parameters": {"min": 20, "max": 20},
+      "comment": "The Grasp waits 20s between grabs (Enemy-Design §5)"
+    },
+    "n2": {
+      "id": "n2",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n3", "n4", "n5"],
+      "parameters": {}
+    },
+    "n3": {
+      "id": "n3",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 2.5}
+    },
+    "n4": {
+      "id": "n4",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n5": {
+      "id": "n5",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 0},
+      "comment": "Grab Attempt"
+    },
+    "n6": {
+      "id": "n6",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n7", "n8"],
+      "parameters": {}
+    },
+    "n7": {
+      "id": "n7",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Agent Query",
+      "children": [],
+      "parameters": {"query": "IsHoldingPlayer"}
+    },
+    "n8": {
+      "id": "n8",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 1},
+      "comment": "Grab hold damage until freed"
+    },
+    "n9": {
+      "id": "n9",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n10", "n11", "n12"],
+      "parameters": {}
+    },
+    "n10": {
+      "id": "n10",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 2}
+    },
+    "n11": {
+      "id": "n11",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Has Attack Token",
+      "children": [],
+      "parameters": {}
+    },
+    "n12": {
+      "id": "n12",
+      "type": "action",
+      "category": "leaf",
+      "name": "Attack",
+      "children": [],
+      "parameters": {"attack": 2},
+      "comment": "Swipe or Clap"
+    },
+    "n13": {
+      "id": "n13",
+      "type": "sequence",
+      "category": "composite",
+      "name": "Sequence",
+      "children": ["n14", "n15"],
+      "parameters": {}
+    },
+    "n14": {
+      "id": "n14",
+      "type": "condition",
+      "category": "leaf",
+      "name": "Is Player In Range",
+      "children": [],
+      "parameters": {"max_range": 10}
+    },
+    "n15": {
+      "id": "n15",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 1.8},
+      "comment": "Advance"
+    },
+    "n16": {
+      "id": "n16",
+      "type": "action",
+      "category": "leaf",
+      "name": "Move To Target",
+      "children": [],
+      "parameters": {"stop_distance": 1.8}
+    }
+  }
+}

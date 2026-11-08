@@ -1,0 +1,17 @@
+{
+  // Type-checks the editor's JSDoc-annotated JavaScript. Nothing is emitted.
+  // Run: npx tsc --noEmit --allowJs --checkJs
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true
+  },
+  "include": ["editor/*.js", "editor/*.d.ts"],
+  "exclude": ["editor/fuse.esm.js", "editor/sw.js"]
+}
