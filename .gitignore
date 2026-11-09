@@ -4,5 +4,6 @@ __pycache__/
 trees/
 .DS_Store
 CLAUDE.md
+*.plan.txt
 node_modules/
 dist/

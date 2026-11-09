@@ -1,5 +1,7 @@
 # Behavior Tree Editor
 
+[![CI](https://github.com/hansvidaure24/Behavior-Tree-Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/hansvidaure24/Behavior-Tree-Editor/actions/workflows/ci.yml)
+
 **Used to build the enemy AI in Hold Steadfast**, a co-op horde-defense game made in Unity. The Gravewarden, a
 halberd-wielding blocker, plays a tree designed in this editor. Twelve more of its enemy trees open here too (all but
 one, which uses a node type the editor doesn't have yet), and a test in the game proves each one makes exactly the
